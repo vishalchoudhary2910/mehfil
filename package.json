@@ -1,0 +1,27 @@
+{
+  "name": "mehfil",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "npm run build && wrangler dev",
+    "start": "npm run build && wrangler dev",
+    "seed:local": "wrangler d1 execute mehfil --local --file=./schema.sql && wrangler d1 execute mehfil --local --file=./seed.sql",
+    "engines:local": "node scripts/run-engines.mjs"
+  },
+  "dependencies": {
+    "@freebuff/auth": "^0.1.0",
+    "hono": "^4.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^6.4.5",
+    "wrangler": "^4.152.0"
+  }
+}

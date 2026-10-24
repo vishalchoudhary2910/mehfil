@@ -1,0 +1,685 @@
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Artist Hiring & Collaboration Platform -- Full
+Product & Business Plan
+
+ Oct 24, 2026 · @Vishal
+
+Executive summary
+
+Build a two-sided marketplace plus community where anyone can hire, collaborate with,
+or watch performing and creative talent -- and where artists can form teams and run their
+own shows. Positioning: "Hire, team up, and perform -- the operating system for live and
+creative talent."
+
+Most platforms today do only one job: booking (StarClinch, GigSalad), freelancing (Fiverr),
+or ticketing (BookMyShow, District). Your edge is joining all three around one artist
+identity: book  collaborate  perform  get rebooked, with payments, contracts and
+reviews handled inside the app.
+
+The winning wedge is not "everything for everyone" on day one. Start with one city, three
+categories (DJs, singers/live bands, anchors/emcees), and private events (weddings,
+birthdays, kitty and bachelor parties, corporate) where demand is frequent and prices
+are mid-range. Teams, live shows and creator gigs layer on once bookings are flowing.
+
+Competitor landscape
+
+No one owns the full loop of hire + collaborate + perform. Each competitor solves one
+slice, which is your opening.
+
+Competitor          What they do                                        Model       Where they fall short
+                                                                                    (your attack)
+StarClinch (India)  Largest Indian artist                               Managed
+                    booking site; founded                               booking,    Agent-heavy and
+                    2015, 17,000+ artists in                            commission  corporate-focused;
+                    14 categories, 450+                                             slow quotes; no artist-
+                    cities, escrow released                                         to-artist collaboration,
+                    after the show                                                  teams, or live shows;
+                                                                                    weak for small budget
+                                                                                    house parties
+
+                                                                                    Page 1 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Competitor          What they do                                        Model            Where they fall short
+GigSalad (US)                                                                            (your attack)
+                    Lead marketplace:                                   Membership +
+The Bash /          hosts post an event,                                fee              US only; artists
+GigMasters (US)     performers send                                                      complain fees apply
+Fiverr / Upwork     quotes; ~4-5%                                       Membership       even without bookings;
+                    booking fee plus paid                               20% from seller  no community or
+Urban Company /     memberships                                                          collaboration
+JustDial / Sulekha
+                    Similar lead-gen model,                                              Pay-to-play leads, no
+Instagram /         wedding-heavy                                                        India presence
+WhatsApp groups
+                    Remote creative work:                                                Not built for live,
+BookMyShow /        editing, mixing, jingles                                             location-based gigs or
+District / Insider                                                                       dates/venues
+                    Local service                                       Leads /
+SoundBetter /       discovery                                           commission       Artists are an
+BandLab                                                                                  afterthought; no
+                    Where most Indian                                   Free             portfolio depth,
+                    gigs actually get                                                    audio/video samples,
+                    booked today                                                         or availability
+                                                                                         calendars
+                    Ticketing for public                                Ticket fees
+                    shows                                                                No payment
+                                                                                         protection, no
+                    Online music                                        Commission /     contracts, no reviews,
+                    collaboration, session                              freemium         frequent no-shows and
+                    musicians                                                            non-payment
+
+                                                                                         Only for established
+                                                                                         organisers; no hiring,
+                                                                                         no small artists hosting
+                                                                                         their own shows
+
+                                                                                         Online only; no live
+                                                                                         events or local hiring
+
+Your real competitor is Instagram + WhatsApp + word of mouth. You win by being safer
+(escrow, verified profiles, contracts) and faster (instant quotes, real availability) than a
+DM, not by out-listing StarClinch.
+
+Figures for StarClinch and GigSalad are from linked sources; the other rows are from
+general knowledge and should be re-checked before investor use.
+
+                                                                                         Page 2 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Gaps, and how you stand out
+
+Gaps in your current idea (fix before building)
+
+    Too broad on day one. "All artists, all events, live shows, teams" spreads thin supply
+    across too many categories. Launch narrow, expand by data.
+    No trust layer defined. Without escrow, verification and cancellation rules, hosts will
+    keep using WhatsApp and artists will fear non-payment.
+    No pricing logic. Hosts don't know what a DJ costs for 4 hours in Pune. You need visible
+    price ranges and packages.
+    Leakage. After the first booking, host and artist swap numbers and skip you. You need
+    reasons to stay (see moat).
+    Logistics ignored. Sound system, travel, stay, set duration, rider, power backup,
+    permissions and noise curfews decide whether an event works.
+    "Free live shows" has no business model. It is a growth and discovery feature;
+    monetise via tips, tickets later, and sponsorships.
+    Teams need money rules. Who gets paid what when a 5-member band is booked? Split
+    payouts must be automatic.
+    Safety for artists, especially women performing at private parties at night: verified
+    hosts, check-in, SOS, and a host rating.
+
+Gaps in the market you can own
+
+ 1. Mid and low-budget private events (5k-75k): kitty parties, birthdays, house parties,
+    small weddings. StarClinch is pricey and agent-led; Instagram is risky.
+
+ 2. Instant, transparent booking: packages with fixed prices and real availability, not
+    "request a quote and wait 2 days".
+
+ 3. Artist collaboration: finding a drummer for tonight's gig, forming a band, splitting pay.
+    Nobody does this for live work in India.
+
+ 4. Tier 2/3 cities and regional artists: dhol, Sufi, qawwali, garba, bhajan, Punjabi, folk,
+    anchors in Hindi and regional languages.
+
+ 5. Creator + event bundles: DJ + photographer + video editor + anchor as one package.
+
+Your moat (why users stay)
+
+    Artist OS, not just a listing: calendar, invoices, GST-ready payouts, contracts, team
+    management, earnings dashboard, Instagram-linked portfolio. If artists run their
+    business on your app, they bring their own clients to it.
+    Protection only on-platform: escrow, no-show refund guarantee, backup artist
+    replacement. Paying outside loses all of it.
+
+                                                                                                                                                                                                                                            Page 3 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Reputation that compounds: verified gigs count, reviews, "rebook rate" badges.
+Artists can't take that to WhatsApp.
+
+Network effects in teams: once bands, collectives and crews live on your app, they
+recruit members and clients there.
+
+User types and roles
+
+One account, many roles: a person can be a host today and a performer tomorrow. Roles
+are switched with a toggle, not separate apps.
+
+Role               Who                                                  Main jobs on the platform
+Host (individual)  Families, kitty party groups,                        Find, compare, book, pay safely,
+                   friends planning bachelor parties,                   review
+Host (business)    birthdays
+                   Clubs, cafes, bars, hotels, wedding                  Recurring bookings, multiple
+Artist / creator   planners, corporates, colleges                       venues, invoices with GST, team
+                                                                        accounts
+Team / band /      Singers, DJs, instrumentalists,                      Profile, packages, calendar,
+collective         dancers, anchors, comedians,                         quotes, get paid, grow fans
+Agency /           magicians, photographers, video
+manager            editors, makeup artists, painters                    Shared profile, member roles,
+Venue              Groups with a leader and members                     split payouts, internal chat
+Fan / audience                                                          Manage many artists, bulk
+Admin / ops        Talent managers, event companies                     calendars, commission tracking
+                                                                        List venue, post open slots, host
+                   Clubs, banquet halls, cafes with                     shows
+                   stages                                               Follow artists, attend free or paid
+                   Anyone                                               shows, tip, request songs
+                                                                        Verification, disputes, payouts,
+                   Your team                                            moderation, category
+                                                                        management
+
+Full feature set
+
+Tagged by phase: P1 = MVP, P2 = growth, P3 = scale. Items marked (missing) were not in
+your original list but are essential.
+
+                                                                                                                                                                                                                                           Page 4 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+1. Discovery and search
+
+    P1: Filters by category, city, budget, language, genre, event type, date availability, rating
+    P1: Rich profiles: video/audio samples, Instagram and YouTube embeds, past gigs,
+    equipment owned, travel radius
+    P1 (missing): Packages with fixed prices (e.g. "DJ 3 hrs + basic sound, 15,000")
+    P2: Smart match: host describes the event, app suggests 5 best-fit artists
+    P2 (missing): Event bundles: DJ + anchor + photographer in one checkout
+    P3: AI search ("Sufi singer for a mehendi in Jaipur under 40k")
+
+2. Booking and requests
+
+    P1: Instant book (for packages) or request-a-quote
+    P1: Post an event / requirement; artists apply with quotes (reverse marketplace)
+    P1 (missing): Real-time availability calendar, Google Calendar sync
+    P1 (missing): Event brief: venue, timing, set length, audience size, song requests, dress
+    code, sound/power available
+    P2: Recurring bookings for clubs (every Friday DJ)
+    P2 (missing): Backup artist guarantee if the booked artist cancels
+    P2: Tech rider and hospitality rider (green room, food, travel, stay)
+
+3. Payments and money
+
+    P1: Advance payment held in escrow, released after the event
+    P1: UPI, cards, net banking, EMI for large weddings
+    P1 (missing): Cancellation policies (flexible / moderate / strict) chosen by artist
+    P2: Split payouts to team members, automatic
+    P2 (missing): GST invoices, TDS handling, earnings statements for ITR
+    P2: Tips and gifts during live shows
+    P3: Instant payout, artist micro-loans for equipment
+
+4. Teams, bands and collaboration
+
+    P1: Create a team, invite members, roles (leader, member, manager)
+    P2: "Find a collaborator" board: "Need a tabla player tomorrow in Delhi, 3k"
+    P2: Team chat, shared calendar, set lists, rehearsal scheduling
+    P2: Temporary teams for a single gig ("supergroup")
+    P3: Remote collaboration: file sharing, stems, version history for producers and editors
+
+                                                                                                                                                                                                                                            Page 5 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+5. Live shows and community
+
+    P1: Artists and users can create public shows (venue, date, free/paid), listed by city
+    P2: In-app livestream (or YouTube Live embed first), song requests, tips, chat
+    P2: Follow artists, show reminders, "what's happening near me this weekend"
+    P2: Open mics and jam sessions hosted by venues
+    P3: Ticketing with QR entry, seat limits, guest lists
+    P3: Talent contests, battles of the bands, sponsored by brands
+
+6. Communication
+
+    P1: In-app chat (with phone numbers masked until booking is paid)
+    P1: WhatsApp notifications (critical in India) and push/SMS/email
+    P2: In-app voice/video call for auditions
+    P2: Quote templates and saved replies for artists
+
+7. Trust and safety (mostly missing)
+
+    P1: Phone + Aadhaar/PAN KYC for artists, verified badge
+    P1: Two-way reviews (host rates artist, artist rates host)
+    P1: Report and block, content moderation
+    P2: Event-day check-in / check-out with location, SOS button, share live location
+    P2: Digital contract auto-generated per booking
+
+8. Artist business tools
+
+    P1: Earnings dashboard, booking calendar
+    P2: Public profile link and QR (for their Instagram bio)
+    P2: Analytics: profile views, conversion, best-paying event types
+    P2: Premium plans: featured listing, lower commission, more photos/videos
+    P3: Portfolio website builder, merch store, EPK (electronic press kit)
+
+9. Venue and club tools
+
+    P2: Venue profile, stage specs, open slots calendar
+    P2: Artist roster management and recurring schedules
+    P3: Revenue share on ticketed nights
+
+10. Admin panel
+
+    P1: Verification queue, user management, category management, booking oversight
+
+                                                                                                                                                                                                                                            Page 6 of 16
+ Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+     P1: Dispute resolution, refunds, payouts
+     P2: Fraud detection, pricing analytics, CMS for banners and campaigns
+
+End-to-end flows
+
+A. Artist onboarding (target: live profile in under 10 minutes)
+
+ 1. Sign up with phone OTP or Google; pick "I'm an artist"
+ 2. Choose category and sub-skills (e.g. Singer  Bollywood, Sufi, Ghazal)
+ 3. Import from Instagram/YouTube: photos, reels, follower count
+ 4. Add 1-3 packages with price, duration, inclusions
+ 5. Set city, travel radius, languages, availability
+ 6. KYC (PAN/Aadhaar via DigiLocker) and bank/UPI for payouts
+ 7. Profile goes live as "New"; verified badge after KYC + first completed gig
+
+B. Host booking (target: booked in under 5 minutes)
+
+ 1. Open app  choose event type (birthday, kitty party, club night...) or search
+ 2. Enter date, city, budget, guest count  see available artists with prices
+ 3. Compare, watch samples, chat (numbers hidden)
+ 4. Instant-book a package, or send a request and receive quotes
+ 5. Fill event brief (venue, timing, sound, song requests)
+ 6. Pay advance (e.g. 30-50%) into escrow; contract auto-generated
+ 7. Reminders to both sides at 7 days, 1 day and 3 hours
+ 8. Event day: artist checks in at venue via app
+ 9. After event: host confirms (or auto-confirms after 24-48 hrs if silent)  balance
+
+     released to artist
+10. Both leave reviews; host gets "rebook" and "book for next event" prompts
+Branches: artist cancels  backup suggested + full refund option. Host cancels  refund
+per policy. Dispute raised within 48 hrs  payout frozen, ops reviews chat, check-in data
+and evidence.
+
+C. Team / band flow
+
+ 1. Leader creates team, sets name, genre, combined packages
+ 2. Invites members via in-app search, phone, or invite link
+ 3. Members accept; leader sets default pay split (fixed or %)
+ 4. Booking comes in  members confirm availability for that date
+
+                                                                                                                                                                                                                                             Page 7 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+5. Missing member? Post a substitute request on the collaborator board
+6. After event, payout splits automatically to each member
+
+D. Live show flow
+
+1. Any user creates a show: title, artists/teams, venue or online, date, free/paid, capacity
+2. Optional: invite co-performers; venue confirms
+3. Show is listed in city feed and on followers' timelines; RSVPs collected
+4. Day of: livestream or in-person entry via QR; tips and song requests live
+5. After: recording posted to profile, attendees prompted to follow
+
+E. Remote creator gig (editors, designers, producers)
+
+1. Host posts brief or buys a fixed package
+2. Milestones with escrow per milestone
+3. File delivery in app, up to N revisions
+4. Approve  payment released
+
+Trust, safety, payments and legal
+
+Trust is the product. Hosts fear no-shows; artists fear non-payment. Solve both and you
+beat WhatsApp.
+
+Area          What to set up                                            Notes
+Escrow /                                                                Avoid holding money in your own
+payments      Payment aggregator with                                   account; that needs RBI payment-
+              marketplace split + nodal/escrow                          aggregator licensing
+KYC           (Razorpay Route, Cashfree Easy
+              Split, or similar)                                        Store minimal data; mask Aadhaar
+Cancellation
+              Artist PAN + bank verification;                           Show policy clearly before
+Contracts     Aadhaar via DigiLocker; business                          payment
+              hosts GSTIN
+                                                                        E-sign optional at P2
+              3 artist-chosen policies + platform
+              penalties for artist no-shows (rank
+              drop, suspension)
+
+              Auto-generated booking
+              agreement (scope, timing,
+              payment, cancellation, liability)
+              accepted by both
+
+                                                                        Page 8 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Area                What to set up                                      Notes
+GST                                                                     Talk to a CA about the e-
+TDS                 Register; charge GST on your                        commerce operator rules (TCS)
+Music licensing     commission; GST invoices for                        before launch
+Safety              business hosts                                      Confirm current rules with a CA
+Privacy
+Disputes            Possible TDS on payments to                         Usually the venue's responsibility;
+                    artists above thresholds                            state it in terms
+
+                    Public performance of recorded                      Night parties are the highest-risk
+                    music at clubs/events may need                      segment
+                    PPL/IPRS/Novex licences
+                                                                        Required as rules come into force
+                    Host verification, women-safety
+                    features, SOS, event check-in, no-                  Track dispute rate per artist
+                    alcohol-to-minors rule
+
+                    India DPDP Act 2023 compliance:
+                    consent, data deletion, privacy
+                    policy
+
+                    48-hr window, evidence upload,
+                    ops review within 72 hrs, clear
+                    refund matrix
+
+I'm not a lawyer or tax advisor; confirm GST, TDS, payment-aggregator and DPDP
+requirements with a CA and lawyer before launch.
+
+Business model and revenue
+
+Start with a low, fair commission to beat WhatsApp on cost, then add subscriptions and
+services once trust is built.
+
+Stream              How it works                                        Suggested start            Phase
+Booking                                                                 5% host + 5-8% artist      P1
+commission          % of each booking, split                            (lower than agencies' 15-
+                    between host fee and artist                         25%)                       P2
+Artist Pro          fee                                                 299-999 / month
+subscription                                                                                       P2
+                    Featured placement, lower                           1,999-9,999 / month
+Business host plan  commission, more media,
+                    analytics
+
+                    Clubs/planners: recurring
+                    bookings, GST invoices,
+                    multiple users
+
+                                                                                                   Page 9 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Stream             How it works                                         Suggested start     Phase
+Event bundles /                                                         10-15% service fee  P2
+concierge          Managed booking for                                                      P2
+Tips and gifts in  weddings and corporates                              10-20%              P3
+live shows         Platform keeps a cut                                                     P3
+Ticketing
+Ads and            Fee per ticket on paid shows                         5-8% + gateway      P3
+sponsorships                                                            Custom              P3
+                   Brands sponsor contests,
+Add-ons            open-mic series, featured                            Margin / referral
+                   slots                                                Fee / referral
+Fintech
+                   Sound/light rental, transport,
+                   insurance for events
+
+                   Instant payouts, equipment
+                   loans via partners
+
+Rule of thumb: never charge artists for leads that don't convert. GigSalad's pay-to-play
+model is its most common complaint; use it as a selling point.
+
+User acquisition and retention
+
+Supply first, then demand, in one city. Aim for 300-500 verified artists in the launch city
+before spending on host marketing.
+
+Step 1: Pull artists (weeks 0-8)
+
+    Manual onboarding: your team visits music schools, rehearsal studios, open mics,
+    college fests, DJ academies; builds profiles for artists on the spot
+    Instagram outreach: DM local DJs, singers, bands with a pre-built profile link ("Your
+    profile is ready, claim it")
+    Founding Artist program: first 500 artists get 0% commission for 6 months and a
+    "Founding Artist" badge
+    Guaranteed first gig: book some artists yourself for your own launch shows and
+    partner events
+    Referral: artist invites artist  both get commission credit
+    Teams feature as a hook: bands join to manage members and splits even before they
+    get bookings
+
+                                                                                            Page 10 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Step 2: Pull hosts (weeks 6-16)
+
+    Kitty party and RWA groups: partner with organisers; offer discount codes for group
+    members
+    Wedding planners, decorators, banquet halls, caterers: referral fee per booking they
+    send
+    Clubs and cafes: free business plan for 3 months; you fill their weekday nights
+    SEO pages: "DJ for birthday party in Pune", "live band for wedding in Jaipur" -- one
+    page per category × city × event type
+    Short video content: reels of artists performing at your booked events, tagged with
+    the app
+    Free weekly live shows in cafes: audience discovers both artists and the app
+    Corporate HR: Diwali parties, offsites, annual days
+
+Step 3: Retention and anti-leakage
+
+    Event-anniversary and birthday reminders ("Book again for Riya's birthday?")
+    Loyalty credits for hosts; lower commission for artists with high on-platform rebook
+    rates
+    Protection, reviews and contracts only apply to on-platform payments
+    Mask contact info until booking is paid
+    Make the artist dashboard so useful (calendar, invoices, earnings) that artists route
+    their own clients through it
+
+Growth loops
+
+1. Booking  reels from the event  new hosts discover the artist  more bookings
+2. Artist shares profile link in Instagram bio  fans and hosts land on the app
+3. Live show  attendees follow artists  they host their own events later
+4. Team leader invites members  members create their own profiles and teams
+
+Tech architecture and stack
+
+One codebase for Android + iOS, one web app, one backend. Use managed services early;
+don't build what you can rent.
+
+Layer       Recommended                                                 Why
+Mobile app  React Native (Expo) or Flutter
+                                                                        One codebase for Android and iOS;
+                                                                        Android-first for India
+
+                                                                        Page 11 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Layer          Recommended                                              Why
+Web            Next.js                                                  SEO pages for "DJ in <city>" are a
+                                                                        major acquisition channel
+Backend        Node.js (NestJS) or Django                               Fast to build, big talent pool
+Database       PostgreSQL (+ PostGIS for location                       Bookings and payments need
+               search)                                                  relational integrity
+Search         Meilisearch / Typesense, later                           Fast filters by city, price, category
+               Elasticsearch
+Cache /        Redis + BullMQ / Celery                                  Reminders, payouts, notifications
+queues
+Media          S3/Cloudflare R2 + CDN; Mux or                           Portfolio videos and recordings
+               Cloudflare Stream for video
+Chat                                                                    Don't build chat from scratch
+               Stream Chat / Sendbird, or Firebase
+Live           at start                                                 Live infra is expensive; validate
+streaming                                                               demand first
+               Start with YouTube Live / Instagram
+Payments       embeds; later 100ms, Agora or Mux                        Escrow-style holds and split
+               Live                                                     payouts
+KYC                                                                     Aadhaar/PAN verification
+               Razorpay Route / Cashfree
+Notifications  marketplace splits                                       WhatsApp is how India responds
+
+Maps           DigiLocker, Signzy / IDfy /                              Venue location, travel radius
+Analytics      HyperVerge                                               Funnel and retention tracking
+
+Hosting        WhatsApp Business API (Gupshup,                          Data residency, low latency
+               Interakt, Wati), FCM, SMS
+
+               Google Maps / Ola Maps
+
+               Mixpanel or PostHog, Firebase
+               Crashlytics
+
+               AWS Mumbai region or GCP
+
+Core data entities: User, Role, ArtistProfile, Package, Team, TeamMember, Availability,
+EventRequest, Quote, Booking, Payment, Payout, Contract, Review, Show, RSVP/Ticket,
+Message, Dispute, Notification.
+
+Phased roadmap
+
+Move to the next phase only when the gate metric is hit, not when the calendar says so.
+
+                                                                        Page 12 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Phase     Timeline  Scope                                               Team           Gate to move on
+0.        Month                                                         2-3 founders   30+ paid bookings,
+Validate  0-2       No app. Instagram page                              2 devs, 1      hosts say they'd use it
+1. MVP    Month     + WhatsApp + Google                                 designer, 1-2  again
+          2-6       Form; manually book                                 ops/sales      300+ artists, 100+
+2.                  30-50 events in one city                                           bookings/month, <5%
+Growth    Month                                                         6-10 people    no-show
+          6-15      1 city, 3-5 categories;
+3. Scale            profiles, packages,                                 20-40 people   1,000+
+          Month     search, request/instant                                            bookings/month, 30%+
+4.        15-30     book, escrow, chat,                                 --             host repeat rate
+Expand              reviews, basic teams,
+          Year 3+   admin panel, web SEO                                               Positive contribution
+                    pages                                                              margin per booking
+
+                    3-5 cities; split payouts,                                         --
+                    collaborator board,
+                    public shows + RSVPs,
+                    business host plans,
+                    Artist Pro, WhatsApp
+                    automation, backup
+                    guarantee
+
+                    15+ cities, Tier 2/3,
+                    regional languages;
+                    livestreams with tips,
+                    ticketing, venue tools,
+                    bundles, AI matching,
+                    remote creator gigs
+
+                    Fintech, equipment
+                    marketplace,
+                    NRI/international
+                    artists, Gulf and SEA
+                    markets
+
+Budget guide (rough, India rates): Phase 0 under 1 lakh; MVP 10-25 lakh with a small in-
+house or agency team; Growth needs seed funding of roughly 1-3 crore.
+
+                                                                                       Page 13 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+KPIs to track
+
+KPI                     What it tells you                               Early target
+Bookings per month      Overall traction                                Grow 15-20% month on
+(GMV)                                                                   month
+Request  booking        Are hosts finding the right artist?
+conversion                                                              25%+
+Time to first quote
+Artist utilisation      Speed vs WhatsApp                               Under 1 hour
+                        % of active artists booked in last              30%+
+Host repeat rate (6     30 days
+months)                                                                 30%+
+No-show / cancellation  Retention
+rate
+Dispute rate            Trust                                           Under 3%
+Leakage estimate
+                        Quality                                         Under 2%
+CAC vs take-rate per    Repeat pairs who stop booking                   Track and reduce
+booking                 on-platform
+Live show RSVPs and     Unit economics                                  CAC paid back within 2
+follows                                                                 bookings
+                        Community health                                Rising per show
+
+Risks, limitations and mitigations
+
+Risk / limitation               Impact                                  Mitigation
+Leakage (off-platform deals)    Kills revenue
+                                                                        Low commission, protection only
+Cold start (no artists or no hosts) No marketplace                      on-platform, masked contacts,
+                                                                        artist business tools
+Seasonality (weddings Oct-Feb,  Uneven revenue
+slow monsoon)                                                           One city, supply first, manual
+                                                                        ops, founding artist perks
+
+                                                                        Clubs, corporates, college fests,
+                                                                        online creator gigs to fill gaps
+
+                                                                                      Page 14 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+Risk / limitation                   Impact                              Mitigation
+Quality variance                    Bad reviews, churn
+                                                                        Verification, sample videos
+Safety incidents at private events  Brand and legal                     required, probation for new
+                                    damage                              artists
+Feature overload
+                                    Slow build,                         Host verification, SOS, check-in,
+Live streaming cost                 confusing app                       insurance partner, clear conduct
+                                                                        rules
+Copyright / music licensing         High infra bills
+Payments regulation                                                     Strict phase gates; teams and
+                                    Takedowns, fines                    live shows only after bookings
+Big player entry (BookMyShow,                                           work
+Urban Company, Instagram)           Can't legally hold
+Ops-heavy model                     funds                               Embeds first; paid streaming
+                                                                        only where tips/tickets cover
+                                    Price and reach                     cost
+                                    pressure
+                                    Hard to scale                       Venue responsibility in terms;
+                                    profitably                          licensed music for streams
+
+                                                                        Use licensed payment
+                                                                        aggregators' escrow/split
+                                                                        products
+
+                                                                        Own the artist community and
+                                                                        teams; depth over breadth
+
+                                                                        Automate quotes, reminders,
+                                                                        payouts; managed service only
+                                                                        for high-value events
+
+Future scope
+
+    AI features: event-to-artist matching, price suggestions from market data, auto-
+    generated set lists, AI-cut highlight reels from show recordings, voice search in Hindi
+    and regional languages
+    Talent academy: courses and mentorship from top artists; certification boosts ranking
+    Equipment marketplace: rent or buy sound, lights, instruments; peer-to-peer rental
+    between artists
+    Fintech for artists: instant payouts, credit for gear, insurance, savings
+    Brand deals: match artists and creators with brand campaigns and jingles
+    Hybrid and virtual events: paid online concerts, virtual birthday performances for NRI
+    families
+
+                                                                        Page 15 of 16
+Artist Hiring & Collaboration Platform -- Full Product & Business Plan
+
+    International: Indian artists for NRI weddings in UAE, UK, US, Canada; Gulf and SEA
+    markets
+    Record and release: studio booking, distribution partnerships, label scouting from top-
+    performing artists
+    B2B SaaS: white-label booking tools for event agencies and hotel chains
+
+Sources
+
+    StarClinch on G2 -- roster size, categories, cities, escrow model
+    StarClinch seed round, Entrepreneur India -- escrow release after performance,
+    corporate clients
+    GigSalad overview, Performer Mag -- lead model and booking fee
+    GigSalad review, SideHusl -- fee complaints and plan pricing
+
+                                                                                                                                                                                                                                          Page 16 of 16
+
