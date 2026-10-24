@@ -52,8 +52,15 @@ npm run start          # = npm run build && wrangler dev
 ```
 
 Open **http://127.0.0.1:8787** — you'll see the landing page, discovery, shows, jams and the
-public claim page with no configuration at all. The **auth-gated** pages (booking, artist desk,
-leads, engine room) require a Freebuff session — see [Auth setup](#auth-setup-local--production).
+public claim page with no configuration at all.
+
+> **No `.dev.vars`? No problem.** The Worker boots without `FREEBUFF_CLIENT_ID`: every public
+> route serves normally, and the auth-gated APIs answer an honest `401` instead of crashing.
+> Sign-in only starts working once you add the auth variables below — until then the app is a
+> fully browsable public site. (A regression test, `tests/boot.test.mjs`, pins this behaviour.)
+
+The **auth-gated** pages (booking, artist desk, leads, engine room) require a Freebuff session —
+see [Auth setup](#auth-setup-local--production).
 
 ### Development mode (hot reload)
 

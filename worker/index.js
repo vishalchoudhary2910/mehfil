@@ -229,13 +229,19 @@ export default {
   },
 
   async fetch(request, env) {
-    const auth = (globalThis.__mehfilAuth ??= createFreebuffAuth({
-      clientId: env.FREEBUFF_CLIENT_ID,
-      issuer: env.FREEBUFF_ISSUER,
-      baseUrl: env.APP_ORIGIN,
-      // Loopback-only escape hatch for local wrangler dev; never true in prod.
-      allowInsecureLocalhost: /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(env.APP_ORIGIN || ""),
-    }));
+    // Auth is optional at boot: a fresh clone with no FREEBUFF_CLIENT_ID must
+    // still serve the public site (discovery, shows, jams, SEO pages) instead
+    // of 500ing on every route. The shim makes every protected route answer
+    // 401 honestly — nobody can sign in until the client ID is provisioned.
+    const auth = (globalThis.__mehfilAuth ??= env.FREEBUFF_CLIENT_ID
+      ? createFreebuffAuth({
+          clientId: env.FREEBUFF_CLIENT_ID,
+          issuer: env.FREEBUFF_ISSUER,
+          baseUrl: env.APP_ORIGIN,
+          // Loopback-only escape hatch for local wrangler dev; never true in prod.
+          allowInsecureLocalhost: /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(env.APP_ORIGIN || ""),
+        })
+      : { getUser: async () => null, wrap: (handler) => handler });
 
     const app = new Hono();
     await ensureSchema(env.DB);
