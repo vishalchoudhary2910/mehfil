@@ -10,6 +10,8 @@ board** — plus public shows, a daily **talent radar**, a **lead engine**, a **
 engine ("I need an artist today"), and **Jam Circles** (free, casual hangouts and live
 “need an audience” broadcasts).
 
+Security model, OWASP mapping and production hardening: [**SECURITY.md**](SECURITY.md).
+
 ## What's in the box
 
 | Surface | What it does |
@@ -246,7 +248,7 @@ scripts/
   run-engines.mjs           run engines locally against a persisted D1 file
   local-db.mjs              node:sqlite D1 shim for the runner
 
-tests/                      node:test suites (52 tests)
+tests/                      node:test suites (81 tests, incl. security.test.mjs)
   talent.test.mjs           radar upsert/dedupe/claim/Wikipedia mapping
   showfeed.test.mjs         iCal/RSS parsing, price inference, upsert idempotency
   leads.test.mjs            CSV/Places mapping, verification, dedupe, matching
@@ -258,6 +260,8 @@ tests/                      node:test suites (52 tests)
 schema.sql                  full D1 schema (all tables)
 seed.sql                    demo marketplace data
 wrangler.jsonc              Worker config (D1 binding, crons, assets)
+SECURITY.md                 threat model, OWASP mapping, hardening checklist
+LICENSE                     proprietary, all rights reserved
 ```
 
 ---
@@ -280,7 +284,7 @@ Key tables: `users`, `artist_profiles`, `packages`, `bookings`, `booking_events`
 
 - **Route-level code splitting.** Only the homepage ships in the entry chunk; discovery,
   profiles, the match deck, booking and the operator consoles load on demand
-  (`initial JS ≈ 204 kB raw / 68 kB gzip`, 22 chunks). A route that fails to load shows a
+  (`initial JS ≈ 225 kB raw / 74 kB gzip`, 22 chunks). A route that fails to load shows a
   retry panel instead of a blank page.
 - **Motion is compositor-only.** Count-ups write to `textContent` (no React re-renders),
   the scroll progress bar and header condense are rAF-throttled, pointers tilt only on
@@ -292,10 +296,32 @@ Key tables: `users`, `artist_profiles`, `packages`, `bookings`, `booking_events`
 - **Safe defaults.** `prefers-reduced-motion` disables every ambient animation, forms keep
   16 px inputs to stop iOS zoom, and the mobile tab bar respects `safe-area-inset`.
 
+## Security
+
+The full threat model, OWASP Top 10 mapping and production checklist live in
+**[SECURITY.md](SECURITY.md)**. The short version:
+
+- **Session** — Sign in with Freebuff (OIDC). The HttpOnly session cookie is issued by the
+  auth SDK and never read by the SPA; no token ever reaches `localStorage`. Any API `401`
+  clears client session state, and the tab re-checks `/api/me` after sleeping.
+- **Headers** — one egress middleware adds CSP (`frame-ancestors 'none'`, `script-src 'self'`),
+  `X-Frame-Options: DENY`, `nosniff`, COOP/CORP, Referrer-Policy, Permissions-Policy and
+  HSTS on https origins to every response.
+- **CSRF** — every authenticated mutation requires a same-origin request; the only
+  cross-origin POST is the tokenised RFC 8058 unsubscribe link.
+- **Abuse** — D1-backed rate limits (hashed IPs, never raw), hidden honeypot fields on
+  anonymous forms, and owner-only operator consoles that stay closed in production until
+  `LEAD_OWNER_EMAILS` is set.
+- **SSRF** — show-feed URLs must be public http(s) on 80/443 with no credentials; redirects
+  are followed manually (max 4) and each hop is re-validated against private/link-local/
+  metadata ranges.
+- **Supply chain** — no third-party scripts, no source maps in the build, secrets only in
+  Sites Secrets, `.env*`/`.dev.vars` ignored.
+
 ## Testing
 
 ```bash
-npm test                   # all suites (node:test, 52 tests)
+npm test                   # all suites (node:test, 81 tests)
 node --test tests/jam.test.mjs   # one suite
 ```
 
@@ -311,6 +337,9 @@ Coverage highlights:
   back-and-forth messaging without accounts, alert idempotency.
 - Jam capacity/`full`/re-open, broadcast throttling, day-only broadcast, sweep expiry + purge,
   jam alert idempotency.
+- Security middleware: CSP/framing headers, HSTS only on https, no route-header clobbering,
+  fixed-window limits, honeypot detection, JSON-LD escaping, and the SSRF guard (private IPs,
+  numeric spellings, IPv4-mapped IPv6, redirects into metadata space).
 
 ---
 
@@ -322,7 +351,10 @@ Coverage highlights:
 3. Auth is already provisioned for this site (`freebuff-site.json`); deployed
    `FREEBUFF_CLIENT_ID`/`FREEBUFF_ISSUER`/`APP_ORIGIN` are injected automatically.
 4. Set optional secrets (Telegram, Resend, Places, YouTube…) in **Sites → Secrets**.
+   Set `LEAD_OWNER_EMAILS` to the operator account(s) — otherwise the leads, engine and
+   show-feed consoles return `403` on the deployed origin by design.
 5. Seed the hosted D1, then verify sign-in on the real origin before publishing.
+   Re-test one foreign-origin `POST` (expect `403`) and `/robots.txt` (AI crawlers disallowed).
 
 Production publishing needs explicit authorization; preview URLs are also public.
 
@@ -331,7 +363,9 @@ Production publishing needs explicit authorization; preview URLs are also public
 ## Verification done
 
 - `vite build` clean; `wrangler deploy --dry-run` clean.
-- **70 unit tests** green across eight suites.
+- **81 unit tests** green across eleven suites, including the security middleware
+  (headers, HSTS gating, CSRF-independent rate limiting, honeypot) and the SSRF guard
+  (private ranges, numeric IP forms, redirect refusal).
 - API matrix via curl: filters, combined filters, JSON 404s, hostile inputs (SQLi-shaped params),
   CSRF foreign origin → 403, every user route signed-out → 401, auth routes reachable.
 - Browser walkthrough (signed out, 390px and 1440px): landing, discovery + filters, artist profile,
@@ -356,4 +390,8 @@ Production publishing needs explicit authorization; preview URLs are also public
 
 ## License
 
-Private. All rights reserved.
+Proprietary — **all rights reserved**. See [LICENSE](LICENSE). The source is shared for review
+only; copying, redeploying or creating derivative works requires written permission.
+
+`/robots.txt` also asks the known model-training crawlers to stay out, but that is a
+policy declaration, not enforcement — see [SECURITY.md](SECURITY.md#on-nobody-can-clone-this-with-ai).

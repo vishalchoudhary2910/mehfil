@@ -14,7 +14,7 @@ export default function Claim() {
   const [f, setF] = useState({
     name: "", category: "singer", city: "", area: "",
     phone: "", email: "", instagram: "", portfolio: "",
-    bio: "", freelance: true,
+    bio: "", freelance: true, website: "",
   });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(null);
@@ -94,6 +94,15 @@ export default function Claim() {
       </p>
 
       <form className="card" style={{ marginTop: 16 }} onSubmit={submit}>
+        <input
+          className="hp-field"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={f.website}
+          onChange={set("website")}
+        />
         <div className="grid grid-2" style={{ gap: 12 }}>
           <div className="field">
             <label>Stage / act name *</label>

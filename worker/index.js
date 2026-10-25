@@ -4,6 +4,7 @@ import { createFreebuffAuth, isSameOriginRequest } from "@freebuff/auth";
 import { Hono } from "hono";
 import { mountSeo } from "./seo.js";
 import { mountShareRoutes } from "./share.js";
+import { applySecurityHeaders } from "./security.js";
 import { mountExtraRoutes, ensureSchemaOnce } from "./extra.js";
 import { mountLeadRoutes, ensureLeadsSchema } from "./leads.js";
 import { mountTalentRoutes, ensureTalentSchema } from "./talent.js";
@@ -872,8 +873,10 @@ export default {
     const owns404 = p.startsWith("/api/") || p === "/in" || p.startsWith("/in/") ||
       p === "/sitemap.xml" || p === "/robots.txt" || p === "/unsubscribe";
     if (res.status === 404 && !owns404) {
-      return env.ASSETS.fetch(request);
+      return applySecurityHeaders(await env.ASSETS.fetch(request), env);
     }
-    return res;
+    // Single egress point: every HTML, JSON and asset response leaves with
+    // CSP, framing protection, nosniff and the rest of the header set.
+    return applySecurityHeaders(res, env);
   },
 };

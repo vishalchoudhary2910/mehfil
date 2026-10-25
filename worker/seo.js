@@ -4,6 +4,7 @@
 // Real HTML in the response body: crawlers get content without executing JS,
 // and every page carries live prices + live artist availability, so the pages
 // can't go stale or read as doorway copy.
+import { ldJson } from "./security.js";
 
 export const CATEGORIES = {
   dj: { label: "DJ", plural: "DJs", icon: "🎧" },
@@ -153,7 +154,7 @@ ${body.sections}
   <div>Mehfil — hire, team up, and perform. Escrow-protected bookings for private events in India. This is a demo build: payments and payouts are simulated.</div>
   <div class="crumbs" style="margin-top:8px"><a href="/in">All city guides</a> · <a href="/">Home</a> · <a href="/discover">Browse all artists</a></div>
 </footer>
-${body.jsonld ? `<script type="application/ld+json">${JSON.stringify(body.jsonld)}</script>` : ""}
+${body.jsonld ? ldJson(body.jsonld) : ""}
 </body>
 </html>`;
 }
@@ -163,12 +164,21 @@ const EVENTS_LIST = Object.keys(EVENTS);
 
 // GET /in/:city/:cat/:event — one page per valid combination.
 export function mountSeo(app) {
-  app.get("/robots.txt", (c) =>
-    new Response(
-      `User-agent: *\nAllow: /\n\nSitemap: ${c.env.APP_ORIGIN}/sitemap.xml\n`,
+  app.get("/robots.txt", (c) => {
+    // Search engines are welcome; model-training crawlers are asked to stay
+    // out. This is a declaration of policy, not enforcement — see SECURITY.md.
+    const AI_CRAWLERS = [
+      "GPTBot", "CCBot", "Google-Extended", "anthropic-ai", "ClaudeBot",
+      "Claude-Web", "PerplexityBot", "Bytespider", "Amazonbot",
+      "Applebot-Extended", "meta-externalagent", "cohere-ai", "Diffbot",
+      "Omgilibot", "FacebookBot", "ImagesiftBot", "YouBot",
+    ];
+    const groups = AI_CRAWLERS.map((bot) => `User-agent: ${bot}\nDisallow: /`).join("\n\n");
+    return new Response(
+      `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /auth/\n\n${groups}\n\nSitemap: ${c.env.APP_ORIGIN}/sitemap.xml\n`,
       { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" } }
-    )
-  );
+    );
+  });
 
   app.get("/sitemap.xml", async (c) => {
     const origin = String(c.env.APP_ORIGIN || new URL(c.req.url).origin).replace(/\/$/, "");

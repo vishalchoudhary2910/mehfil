@@ -23,6 +23,7 @@ import {
 import { resolveUser, isWorkspaceOwner } from "./util.js";
 import { ensureJamSchema } from "./jam.js";
 import { isSameOriginRequest } from "@freebuff/auth";
+import { enforceRateLimit, honeypotTripped } from "./security.js";
 
 const uid = (p) => `${p}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
 export const newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().slice(0, 8);
@@ -282,6 +283,21 @@ async function candidatesFor(db, req) {
   return out.sort((x, y) => y.score - x.score);
 }
 
+// Store a pseudonym, never the raw client IP: the gig-request throttle is the
+// only reason we need a stable per-connection key at all.
+const hashIp = async (env, ip) => {
+  if (!ip) return "";
+  const bytes = new TextEncoder().encode(`${ip}|${env.APP_ORIGIN || "mehfil"}|request`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .slice(0, 12)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+// Internal columns never belong in an API response.
+const withoutIp = ({ ip, ...rest }) => rest;
+
 async function logRequestEvent(db, requestId, type, note, actor = "system") {
   await db.prepare("INSERT INTO request_events (request_id, type, actor, note) VALUES (?,?,?,?)")
     .bind(requestId, type, actor, String(note || "").slice(0, 500)).run();
@@ -309,6 +325,7 @@ export async function createRequest(env, body, { me = null, ip = "" } = {}) {
   if (!me && !host_email && !host_phone) {
     return { error: [400, "Add an email or phone so performers can reach you"] };
   }
+  ip = await hashIp(env, ip);
   if (ip) {
     const recent = await db.prepare("SELECT COUNT(*) n FROM booking_requests WHERE ip = ? AND created_at >= datetime('now','-1 hour')").bind(ip).first();
     if (Number(recent?.n || 0) >= 5) return { error: [429, "Too many requests from this connection — try again later"] };
@@ -360,7 +377,7 @@ export async function createRequest(env, body, { me = null, ip = "" } = {}) {
     invite = await fanOut(env, request);
   }
   const fresh = await db.prepare("SELECT * FROM booking_requests WHERE id = ?").bind(id).first();
-  return { request: fresh, invite };
+  return { request: withoutIp(fresh), invite };
 }
 
 // Invite everyone who fits, automatically. Email when we have an address,
@@ -437,7 +454,13 @@ export async function hostView(db, token) {
     phone: t.status === "confirmed" ? t.phone : "",
   }));
   const counts = rows.reduce((acc, t) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {});
-  return { request, targets: rows, events: events.results ?? [], messages: messages.results ?? [], counts };
+  return {
+    request: withoutIp(request),
+    targets: rows,
+    events: events.results ?? [],
+    messages: messages.results ?? [],
+    counts,
+  };
 }
 
 export async function targetView(db, token) {
@@ -813,6 +836,9 @@ export function mountRequestRoutes(app, auth) {
   app.post("/api/requests", async (c) => {
     if (!sameOrigin(c)) return err(403, "Bad origin");
     const body = await c.req.json().catch(() => ({}));
+    if (honeypotTripped(body)) return err(400, "Could not post this brief — check your details");
+    const limited = await enforceRateLimit(c, { scope: "gig-brief", limit: 10, windowSec: 3600 });
+    if (limited) return limited;
     const fb = await auth.getUser(c.req.raw).catch(() => null);
     const me = fb ? await resolveUser(c.env.DB, fb) : null;
     const r = await createRequest(c.env, body, { me, ip: ipOf(c) });
@@ -899,7 +925,7 @@ export function mountRequestRoutes(app, auth) {
         (SELECT COUNT(*) FROM request_targets t WHERE t.request_id = r.id) AS target_count,
         (SELECT COUNT(*) FROM request_targets t WHERE t.request_id = r.id AND t.status IN ('available','maybe','confirmed')) AS responses
       FROM booking_requests r WHERE r.host_id = ? ORDER BY r.created_at DESC LIMIT 50`).bind(me.id).all()).results ?? [];
-    return json({ requests: rows.map((r) => ({ ...r, host_url: hostUrl(c.env, r.token) })) });
+    return json({ requests: rows.map((r) => ({ ...withoutIp(r), host_url: hostUrl(c.env, r.token) })) });
   });
 
   // Performer inbox: invitations addressed to my claimed profile.

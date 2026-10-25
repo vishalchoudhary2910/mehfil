@@ -15,6 +15,7 @@ import { ensureJamSchema, runJamSweep } from "./jam.js";
 import { ensureLifecycleSchema, runLifecycle } from "./lifecycle.js";
 import { notify, telegramConfigured } from "./notify.js";
 import { resolveUser, isWorkspaceOwner } from "./util.js";
+import { purgeRateLimits } from "./security.js";
 import { isSameOriginRequest } from "@freebuff/auth";
 
 let READY = false;
@@ -48,6 +49,8 @@ const changes = (r) => Number(r?.meta?.changes ?? r?.changes ?? 0);
 
 export async function runDailyEngines(env, { trigger = "cron", silent = false, scopes = ["talent", "shows", "leads", "requests", "jams", "lifecycle"] } = {}) {
   await ensureAll(env);
+  // Abuse counters are disposable; keep only the current day's windows.
+  await purgeRateLimits(env);
   const db = env.DB;
   const out = {
     trigger, ok: true, errors: [], talent: null, shows: null, leads: null, followups: null,

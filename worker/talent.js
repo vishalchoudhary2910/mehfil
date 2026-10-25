@@ -27,6 +27,7 @@ import { ensureLeadsSchema, upsertLead } from "./leads.js";
 import { mapWikiPage, wikiRefreshPages, wikiSearchPeople, WIKI_CATEGORY_KEYS } from "./wikisource.js";
 import { notify } from "./notify.js";
 import { resolveUser, isWorkspaceOwner } from "./util.js";
+import { enforceRateLimit, honeypotTripped } from "./security.js";
 import { isSameOriginRequest } from "@freebuff/auth";
 
 const uid = (p) => `${p}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -1086,6 +1087,9 @@ export function mountTalentRoutes(app, auth) {
     await ensureTalentSchema(c.env);
     const db = c.env.DB;
     const b = await c.req.json().catch(() => ({}));
+    if (honeypotTripped(b)) return err(400, "Could not publish this profile — check your details");
+    const limited = await enforceRateLimit(c, { scope: "artist-self-list", limit: 4, windowSec: 3600 });
+    if (limited) return limited;
     const name = String(b.name || "").trim().slice(0, 120);
     const city = String(b.city || "").trim().slice(0, 80);
     if (name.length < 2) return err(400, "Add your stage or act name");

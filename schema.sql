@@ -569,3 +569,14 @@ CREATE TABLE IF NOT EXISTS outreach_queue (
   sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_outreach_queue_status ON outreach_queue(status, created_at);
+
+-- --------------------------------------------------------- abuse controls ---
+-- Fixed-window counters keyed by a salted hash of the client IP + scope, never
+-- the raw address. Created lazily by worker/security.js; declared here for a
+-- clean install. Rows are disposable and safe to prune by window_start.
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  window_start INTEGER NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_window ON rate_limits(window_start);

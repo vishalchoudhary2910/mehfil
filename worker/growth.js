@@ -12,6 +12,7 @@ import { isSameOriginRequest } from "@freebuff/auth";
 import { json, err, uid, resolveUser } from "./util.js";
 import { sendEmail } from "./mail.js";
 import { ensureLifecycleSchema, recordConsent, startVenueSequence } from "./lifecycle.js";
+import { enforceRateLimit, honeypotTripped } from "./security.js";
 
 const sameOrigin = (c) => isSameOriginRequest(c.req.raw, c.env.APP_ORIGIN);
 
@@ -126,6 +127,11 @@ export function mountGrowthRoutes(app, auth) {
     const db = c.env.DB;
     await ensureGrowthSchema(c.env);
     const b = await c.req.json().catch(() => ({}));
+    // Bots get a believable success and nothing is written; humans never see
+    // this field. Then a tight per-connection budget stops scripted briefs.
+    if (honeypotTripped(b)) return json({ ok: true, id: "received" }, 201);
+    const limited = await enforceRateLimit(c, { scope: "venue-brief", limit: 6, windowSec: 900 });
+    if (limited) return limited;
     await ensureLifecycleSchema(c.env);
     const email = String(b.email || "").trim().toLowerCase();
     const phone = String(b.phone || "").trim().slice(0, 20);

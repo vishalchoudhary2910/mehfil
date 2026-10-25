@@ -210,3 +210,19 @@ test("invite more only adds performers who were not already asked", async () => 
   const count = await env.DB.prepare("SELECT COUNT(*) n FROM request_targets WHERE request_id = ?").bind(r.request.id).first();
   assert.equal(count.n, 1);
 });
+
+test("gig requests store a pseudonymous IP and never return it", async () => {
+  const r = await createRequest(env, {
+    category: "poet", city: "Pune", date: tomorrow(),
+    host_name: "Ira", host_email: "ira@example.com", auto_invite: false,
+  }, { ip: "203.0.113.5" });
+  assert.ok(r.request, JSON.stringify(r));
+  assert.equal(r.request.ip, undefined, "create response strips ip");
+
+  const row = await env.DB.prepare("SELECT ip FROM booking_requests WHERE id = ?").bind(r.request.id).first();
+  assert.equal(row.ip !== "203.0.113.5", true, "raw IP is never stored");
+  assert.match(row.ip, /^[0-9a-f]{24}$/, "stored as a 96-bit hash");
+
+  const view = await hostView(env.DB, r.request.token);
+  assert.equal(view.request.ip, undefined, "host view strips ip");
+});

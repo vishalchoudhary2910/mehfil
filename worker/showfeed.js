@@ -12,7 +12,8 @@ import { extractPerformers } from "./talent.js";
 import { ensureLeadsSchema, upsertLead } from "./leads.js";
 import { inferCity } from "../shared/categories.js";
 import { notify } from "./notify.js";
-import { resolveUser } from "./util.js";
+import { isWorkspaceOwner, resolveUser } from "./util.js";
+import { isSafeRemoteUrl } from "./security.js";
 import { isSameOriginRequest } from "@freebuff/auth";
 
 const uid = (p) => `${p}_${crypto.randomUUID().replace(/-/g, "").slice(0, 14)}`;
@@ -393,13 +394,27 @@ export function feedUrls(env, dbValue = "", envKey = "FEED_ICAL_URLS") {
   return [...new Set(String(raw).split(/[\n,]+/).map((s) => s.trim()).filter((s) => /^https?:\/\//i.test(s)))];
 }
 
+// Feed URLs are operator-supplied, so this is also an SSRF boundary: validate
+// every hop by hand instead of letting fetch follow redirects to a private
+// host or the cloud metadata endpoint.
 async function fetchText(url, fetchImpl) {
-  const res = await fetchImpl(url, {
-    headers: { "User-Agent": "MehfilShows/1.0 (+https://mehfil.app)", Accept: "text/calendar, application/rss+xml, application/xml, text/xml, */*" },
-    redirect: "follow",
-  });
-  if (!res.ok) throw new Error(`Feed ${res.status}`);
-  return res.text();
+  let target = String(url);
+  for (let hop = 0; hop < 4; hop++) {
+    if (!isSafeRemoteUrl(target)) throw new Error("Unsafe feed URL");
+    const res = await fetchImpl(target, {
+      headers: { "User-Agent": "MehfilShows/1.0 (+https://mehfil.app)", Accept: "text/calendar, application/rss+xml, application/xml, text/xml, */*" },
+      redirect: "manual",
+    });
+    if ([301, 302, 303, 307, 308].includes(res.status)) {
+      const loc = res.headers.get("location");
+      if (!loc) throw new Error("Redirect without a location");
+      target = new URL(loc, target).toString();
+      continue;
+    }
+    if (!res.ok) throw new Error(`Feed ${res.status}`);
+    return res.text();
+  }
+  throw new Error("Too many redirects");
 }
 
 export async function ingestIcalFeeds(env, urls, { fetchImpl = fetch, defaultCity = "" } = {}) {
@@ -652,11 +667,17 @@ export function mountShowFeedRoutes(app, auth) {
   const err = (status, error) => json({ error }, status);
   const sameOrigin = (c) => isSameOriginRequest(c.req.raw, c.env.APP_ORIGIN);
 
+  // The feed console runs outbound fetches and changes what every visitor
+  // sees, so it is owner-only, not merely signed-in.
   const authed = async (c) => {
     const fb = await auth.getUser(c.req.raw);
     if (!fb) return { error: err(401, "Sign in required") };
     await ensureShowSchema(c.env);
-    return { me: await resolveUser(c.env.DB, fb), db: c.env.DB };
+    const me = await resolveUser(c.env.DB, fb);
+    if (!isWorkspaceOwner(c.env, me)) {
+      return { error: err(403, "This console is limited to the workspace owner") };
+    }
+    return { me, db: c.env.DB };
   };
 
   app.get("/api/shows/feed/status", async (c) => {
@@ -705,6 +726,9 @@ export function mountShowFeedRoutes(app, auth) {
     const kind = b.kind === "rss" ? "rss" : "ical";
     const url = String(b.url || "").trim();
     if (!/^https?:\/\/\S+$/i.test(url)) return err(400, "A valid http(s) feed URL is required");
+    if (!isSafeRemoteUrl(url)) {
+      return err(400, "That feed URL is not allowed — use a public http(s) address");
+    }
     const key = kind === "rss" ? "rss_urls" : "ical_urls";
     const current = feedUrls(c.env, await getSetting(db, key, ""), kind === "rss" ? "FEED_RSS_URLS" : "FEED_ICAL_URLS");
     if (!current.includes(url)) current.push(url);

@@ -36,7 +36,7 @@ export default function Need() {
     area: "", date: params.get("date") || today(), start_time: "20:00",
     event_type: "Cafe / bar night", budget_inr: "", guest_count: 50, brief: "",
     host_name: session?.user?.name || "", host_email: session?.user?.email || "", host_phone: "",
-    auto_invite: true, alert: true,
+    auto_invite: true, alert: true, website: "",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -201,6 +201,15 @@ export default function Need() {
       )}
 
       <form className="card form-grid mt-3" onSubmit={submit}>
+        <input
+          className="hp-field"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={form.website}
+          onChange={set("website")}
+        />
         <div className="field full">
           <label>Who do you need?</label>
           <div className="row wrapline" style={{ gap: 7 }}>

@@ -942,6 +942,21 @@ html { scrollbar-color: #cbbde0 transparent; scrollbar-width: thin; }
 /* Route changes land softly. Mount-only, compositor-only. */
 main > div, main > section { animation: fade-in 0.26s ease both; }
 
+/* Honeypot: a field bots fill and people never see. Kept out of the tab order
+   and the accessibility tree by the markup, hidden here without display:none
+   so autofill scripts still treat it as a real input. */
+.hp-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Booking card identity on phones (the card is ordered above the profile). */
 .side-id { display: none; }
 @media (max-width: 920px) {

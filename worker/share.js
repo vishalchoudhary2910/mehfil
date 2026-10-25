@@ -7,6 +7,7 @@
 // so a shared link is an advertisement instead of a dead end. Crawlers that
 // don't run JavaScript still get the title, description and Person JSON-LD.
 import { categoryLabel } from "../shared/categories.js";
+import { ldJson } from "./security.js";
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (ch) =>
@@ -54,9 +55,7 @@ export function injectMeta(html, meta) {
     `<meta name="twitter:title" content="${esc(meta.title)}">`,
     `<meta name="twitter:description" content="${esc(meta.desc)}">`,
     `<meta name="twitter:image" content="${esc(meta.image)}">`,
-    meta.jsonld
-      ? `<script type="application/ld+json">${JSON.stringify(meta.jsonld).replace(/</g, "\\u003c")}</script>`
-      : "",
+    meta.jsonld ? ldJson(meta.jsonld) : "",
   ]
     .filter(Boolean)
     .join("\n    ");

@@ -32,7 +32,7 @@ export default function Venues() {
   const [form, setForm] = useState({
     name: session?.user?.name || "",
     venue: "", city: "", kind: "cafe", date: "", need: "",
-    email: session?.user?.email || "", phone: "",
+    email: session?.user?.email || "", phone: "", website: "",
   });
 
   useEffect(() => {
@@ -163,6 +163,15 @@ export default function Venues() {
             </div>
           ) : (
             <form className="card" onSubmit={submit}>
+              <input
+                className="hp-field"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={form.website}
+                onChange={set("website")}
+              />
               <div className="form-grid">
                 <div className="field">
                   <label>Your name</label>
