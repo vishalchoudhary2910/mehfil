@@ -502,3 +502,70 @@ CREATE TABLE IF NOT EXISTS jam_runs (
   ok INTEGER NOT NULL DEFAULT 1, error TEXT,
   started_at TEXT NOT NULL DEFAULT (datetime('now')), finished_at TEXT
 );
+
+-- ------------------------------------------------------- growth lifecycle ---
+-- Consent + suppression are the gate for every marketing email. Sequences
+-- power venue shortlists and rebooking; lifecycle_sends is the audit trail and
+-- the daily-cap counter. See worker/lifecycle.js.
+CREATE TABLE IF NOT EXISTS outreach_consents (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL,
+  channel TEXT NOT NULL DEFAULT 'email',
+  purpose TEXT NOT NULL DEFAULT 'lifecycle',
+  source TEXT NOT NULL DEFAULT '',
+  token TEXT NOT NULL,
+  granted_at TEXT NOT NULL,
+  withdrawn_at TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_consent_key ON outreach_consents(subject, channel, purpose);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_consent_token ON outreach_consents(token);
+
+CREATE TABLE IF NOT EXISTS suppressions (
+  channel TEXT NOT NULL,
+  address TEXT NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (channel, address)
+);
+
+CREATE TABLE IF NOT EXISTS lifecycle_sequences (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  city TEXT NOT NULL DEFAULT '',
+  meta TEXT NOT NULL DEFAULT '{}',
+  stage INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
+  next_at TEXT NOT NULL,
+  last_sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sequence_subject ON lifecycle_sequences(kind, subject_id);
+CREATE INDEX IF NOT EXISTS idx_sequence_due ON lifecycle_sequences(status, next_at);
+
+CREATE TABLE IF NOT EXISTS lifecycle_sends (
+  id TEXT PRIMARY KEY,
+  sequence_id TEXT NOT NULL DEFAULT 'manual',
+  stage INTEGER NOT NULL DEFAULT 0,
+  template TEXT NOT NULL DEFAULT '',
+  to_email TEXT NOT NULL,
+  provider TEXT,
+  status TEXT NOT NULL DEFAULT 'sent',
+  error TEXT,
+  sent_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sends_time ON lifecycle_sends(status, sent_at);
+
+CREATE TABLE IF NOT EXISTS outreach_queue (
+  id TEXT PRIMARY KEY,
+  lead_id TEXT,
+  channel TEXT NOT NULL DEFAULT 'manual',
+  draft TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  sent_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_outreach_queue_status ON outreach_queue(status, created_at);

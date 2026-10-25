@@ -65,8 +65,8 @@ see [Auth setup](#auth-setup-local--production).
 ### Development mode (hot reload)
 
 ```bash
-# Terminal 1 — API on :8787
-npx wrangler dev --persist-to /c/tmp/mf --port 8787
+# Terminal 1 — API on :8787 (this machine's local dev DB lives in C:/mehfil-state)
+npx wrangler dev --persist-to C:/mehfil-state --port 8787
 
 # Terminal 2 — Vite dev server on :5173 (proxies /api → :8787)
 npm run dev
@@ -74,7 +74,8 @@ npm run dev
 
 **Windows note:** this workspace path is long; the default local D1 path can exceed `MAX_PATH`
 (260) and make workerd fail with a generic `internal error`. Always pass `--persist-to` a short
-path (like `/c/tmp/mf`) to `wrangler dev` and `wrangler d1 execute --local`.
+path (like `C:/mehfil-state`) to `wrangler dev` and `wrangler d1 execute --local`. The
+project's `seed:local` script already passes it.
 
 ---
 
@@ -88,12 +89,22 @@ All engines run on Cloudflare Cron Triggers (configured in `wrangler.jsonc`) and
 |---|---|---|---|
 | **Talent radar** | daily 03:00 | Finds real artists from Wikipedia, MusicBrainz, YouTube, event listings; refreshes existing rows, retires stale ones | `worker/talent.js`, `wikisource.js` |
 | **Shows feed** | daily 03:00 | Re-reads iCal/RSS/Bandsintown/Eventbrite feeds; creates/updates/retires shows; every show also becomes a demand lead | `worker/showfeed.js` |
-| **Lead engine** | daily 03:00 | Paginates Places, re-verifies stale leads (7-day TTL), runs outreach (half-auto or full-auto), matches open leads to artists, sends digest | `worker/leads.js`, `leadsource.js`, `verify.js` |
+| **Lead engine** | daily 03:00 | Paginates Places, re-verifies stale leads (7-day TTL), queues cold outreach for one-to-one contact (consent-backed email only), matches open leads to artists, sends digest | `worker/leads.js`, `leadsource.js`, `verify.js` |
+| **Lifecycle** | hourly + daily | Venue shortlist sequences (day 0/2/7), rebooking nudges, consent + suppression, unsubscribe and send caps | `worker/lifecycle.js` |
 | **Gig requests** | daily + every 4 h | Nudges unanswered invitations, expires dead ones, fires alerts (artists/shows/leads/jams) | `worker/requests.js` |
 | **Jam sweep** | every cron tick | Retires jams whose day is over (or 4 h past start), purges rows older than 30 days | `worker/jam.js` |
 
 Each engine fails independently: one bad feed never stops the others. Every run is recorded in
 `*_runs` tables and surfaced in the engine room's “Recent engine runs”.
+
+### Outreach safety
+
+- Cold venue outreach is **queued**, never emailed. Email is sent only when an address has an
+  explicit consent row for that purpose.
+- Every marketing email carries `List-Unsubscribe` + a one-click link; a suppression always wins
+  and stops all active sequences for that address.
+- Sends are gated to 09:00–19:00 IST and capped at 40/day, independently of the provider quota.
+- The unsubscribe page lives at `/unsubscribe` and is served by the Worker, not the SPA.
 
 ### Run engines locally against the dev database
 

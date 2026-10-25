@@ -11,7 +11,7 @@ function ArtistCard({ a }) {
     <Link to={`/artist/${a.slug}`} className="card card-hover artist-card" style={{ padding: 0, overflow: "hidden" }}>
       <div
         className="cover"
-        style={{ background: `linear-gradient(135deg, hsl(${a.hue} 62% 42%), hsl(${(a.hue + 52) % 360} 70% 54%))` }}
+        style={{ background: `linear-gradient(135deg, hsl(${a.hue}, 62%, 42%), hsl(${(a.hue + 52) % 360}, 70%, 54%))` }}
       >
         <div className="who">
           <div className="name">{a.stage_name}</div>
@@ -61,7 +61,7 @@ function DirectoryCard({ t }) {
         style={{
           background: t.image_url
             ? `linear-gradient(180deg, rgba(18,12,28,.12) 0%, rgba(18,12,28,.86) 100%), url(${t.image_url}) center/cover`
-            : `linear-gradient(135deg, hsl(${hue} 46% 32%), hsl(${(hue + 48) % 360} 52% 44%))`,
+            : `linear-gradient(135deg, hsl(${hue}, 46%, 32%), hsl(${(hue + 48) % 360}, 52%, 44%))`,
         }}
       >
         <div className="who">
@@ -106,7 +106,7 @@ function MatchCard({ r }) {
         style={{
           background: r.image_url
             ? `linear-gradient(180deg, rgba(18,12,28,.12) 0%, rgba(18,12,28,.86) 100%), url(${r.image_url}) center/cover`
-            : `linear-gradient(135deg, hsl(${hue} 52% 38%), hsl(${(hue + 48) % 360} 60% 50%))`,
+            : `linear-gradient(135deg, hsl(${hue}, 52%, 38%), hsl(${(hue + 48) % 360}, 60%, 50%))`,
         }}
       >
         <div className="who">

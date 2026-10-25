@@ -165,6 +165,14 @@ const PROFILE_COLUMNS = [
   ["accepting_requests", "INTEGER NOT NULL DEFAULT 1"],
   ["directory_id", "TEXT"],
   ["portfolio_url", "TEXT"],
+  // Profile v2 (editorial): presentation + portfolio fields.
+  ["tagline", "TEXT NOT NULL DEFAULT ''"],
+  ["layout_variant", "TEXT NOT NULL DEFAULT 'editorial'"],
+  ["website", "TEXT"],
+  ["portfolio_items", "TEXT NOT NULL DEFAULT '[]'"],
+  ["rider_note", "TEXT NOT NULL DEFAULT ''"],
+  ["press_note", "TEXT NOT NULL DEFAULT ''"],
+  ["accent_hue", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 // Directory columns added after the first release. D1 has no

@@ -11,7 +11,10 @@
 import { parseCsv, rowToLead, dedupeKey, placesSearchAll, mapPlace, matchScore } from "./leadsource.js";
 import { verifyLead } from "./verify.js";
 import { notify, leadMessage, digestMessage, telegramConfigured } from "./notify.js";
-import { sendOutreachEmail, emailConfigured } from "./mail.js";
+import { composeOutreach, emailConfigured } from "./mail.js";
+import {
+  ensureLifecycleSchema, hasEmailConsent, isSuppressed, sendMarketingEmail,
+} from "./lifecycle.js";
 import { resolveUser, isWorkspaceOwner } from "./util.js";
 import { isSameOriginRequest } from "@freebuff/auth";
 
@@ -499,7 +502,7 @@ export function mountLeadRoutes(app, auth) {
     if (!hasContact(lead)) return err(400, "This lead has no phone, email or website to reach");
     const out = await contactLead(db, c.env, lead, "owner-approve");
     const fresh = await db.prepare("SELECT * FROM leads WHERE id = ?").bind(lead.id).first();
-    return json({ lead: fresh, channel: out.channel || null });
+    return json({ lead: fresh, channel: out.channel || null, queued: !!out.queued, reason: out.reason || null });
   });
 
   // ---- settings -------------------------------------------------------------
@@ -542,20 +545,63 @@ export function mountLeadRoutes(app, auth) {
   });
 }
 
-// Human-approved (or cron-auto) outreach. No email/SMS provider is wired, so
-// "sending" records the outreach + pings the operator on Telegram; a real
-// provider adapter can slot in here later without touching callers.
-export async function contactLead(db, env, lead, actor) {
+// Consent-first outreach. Cold email is deliberately NOT sent here: Resend's
+// policy bans unsolicited/scraped outreach, so a lead without an explicit
+// consent row is queued for a human (phone, Instagram DM, or a future outbound
+// provider). This is what keeps the sending domain and the brand alive.
+async function queueOutreach(db, env, lead, draft, actor) {
+  await ensureLifecycleSchema(env);
+  const id = idp("oq");
+  await db
+    .prepare("INSERT INTO outreach_queue (id, lead_id, channel, draft) VALUES (?,?,?,?)")
+    .bind(id, lead.id, "manual", String(draft).slice(0, 4000))
+    .run();
+  await logEvent(db, lead.id, "queued", "No email consent — queued for one-to-one outreach", actor);
+  await notify(
+    env,
+    `${leadMessage(lead, "queued for manual outreach")}\n\n${String(draft).slice(0, 700)}`,
+    "outreach-queue"
+  );
+  return id;
+}
+
+export async function contactLead(db, env, lead, actor, { now = Date.now() } = {}) {
   if (!hasContact(lead)) {
     await logEvent(db, lead.id, "skipped", "No contact channel to reach", actor);
     return { sent: false, reason: "no_contact" };
   }
-  const mail = await sendOutreachEmail(env, lead, actor);
-  const channel = mail.sent ? "email" : "telegram";
-  await db.prepare("UPDATE leads SET status = 'contacted', updated_at = datetime('now') WHERE id = ?").bind(lead.id).run();
-  await logEvent(db, lead.id, "contacted", `Outreach sent (${actor}) via ${channel}${mail.error ? ` — ${mail.error}` : ""}`, actor);
-  await notify(env, leadMessage(lead, `outreach sent (${actor}) via ${channel}`), "outreach");
-  return { sent: true, channel, mail };
+  await ensureLifecycleSchema(env);
+  const email = String(lead.email || "").trim().toLowerCase();
+  const draft = composeOutreach(lead, actor);
+
+  if (email) {
+    if (await isSuppressed(db, "email", email)) {
+      await logEvent(db, lead.id, "skipped", "Address is unsubscribed or suppressed", actor);
+      return { sent: false, reason: "suppressed" };
+    }
+    if (await hasEmailConsent(db, email, "outreach")) {
+      const mail = await sendMarketingEmail(env, {
+        to: email,
+        subject: draft.subject,
+        text: draft.text,
+        purpose: "outreach",
+        template: "lead_outreach",
+        now,
+      });
+      if (mail.sent) {
+        await db.prepare("UPDATE leads SET status = 'contacted', updated_at = datetime('now') WHERE id = ?").bind(lead.id).run();
+        await logEvent(db, lead.id, "contacted", `Outreach sent (${actor}) via email`, actor);
+        await notify(env, leadMessage(lead, `outreach sent (${actor}) via email`), "outreach");
+        return { sent: true, channel: "email", mail };
+      }
+      // Provider/quiet-hour/cap problems fall through to the manual queue; a
+      // consent problem would have been caught above.
+      await logEvent(db, lead.id, "queued", `Email not sent (${mail.reason || "unknown"}) — queued`, actor);
+    }
+  }
+
+  const queueId = await queueOutreach(db, env, lead, email ? `To: ${email}\n${draft.subject}\n\n${draft.text}` : `${draft.subject}\n\n${draft.text}`, actor);
+  return { sent: false, queued: true, queue_id: queueId };
 }
 
 // The daily automation: refresh from Places, verify stale leads, run outreach
@@ -564,7 +610,7 @@ export async function runLeadCron(env, { trigger = "cron", digest = true } = {})
   await ensureLeadsSchema(env);
   const db = env.DB;
   const summary = {
-    trigger, new_leads: 0, verified: 0, invalid: 0, matches: 0, outreach: 0, notified: 0, match_pairs: [],
+    trigger, new_leads: 0, verified: 0, invalid: 0, matches: 0, outreach: 0, queued: 0, notified: 0, match_pairs: [],
     places_new: 0, places_updated: 0, places_key: !!env.GOOGLE_PLACES_API_KEY, top: [], expired: 0, removed: 0,
   };
   const runRow = await db.prepare("INSERT INTO lead_runs (trigger) VALUES (?)").bind(trigger).run();
@@ -605,7 +651,11 @@ export async function runLeadCron(env, { trigger = "cron", digest = true } = {})
     const mode = await getSetting(db, "outreach_mode", "manual");
     if (mode === "auto") {
       const targets = (await db.prepare("SELECT * FROM leads WHERE verification = 'verified' AND wants_artists = 1 AND status = 'new' AND kind IN ('venue','client') ORDER BY rating DESC LIMIT 5").all()).results ?? [];
-      for (const lead of targets) { const sent = await contactLead(db, env, lead, "cron-auto"); if (sent.sent) summary.outreach++; }
+      for (const lead of targets) {
+        const sent = await contactLead(db, env, lead, "cron-auto");
+        if (sent.sent) summary.outreach++;
+        else if (sent.queued) summary.queued++;
+      }
     } else if (newlyVerified.length) {
       for (const lead of newlyVerified.slice(0, 3)) await notify(env, leadMessage(lead, "newly verified — approve to contact"), "verified");
     }

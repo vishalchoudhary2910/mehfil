@@ -5,11 +5,15 @@ export const HOST_FEE_PCT = 5;   // plan: 5% host fee
 export const ARTIST_FEE_PCT = 6; // plan: 5-8% artist fee
 export const ADVANCE_PCT = 40;   // advance held in escrow until the event
 
-export const json = (data, init = {}) =>
-  Response.json(data, {
-    ...init,
-    headers: { "Cache-Control": "private, no-store", ...(init.headers || {}) },
+// Accepts either a ResponseInit object or a bare status number (the form the
+// rest of the worker modules use), and always marks responses private.
+export const json = (data, init = {}) => {
+  const opts = typeof init === "number" ? { status: init } : init;
+  return Response.json(data, {
+    ...opts,
+    headers: { "Cache-Control": "private, no-store", ...(opts.headers || {}) },
   });
+};
 
 export const err = (status, error) => json({ error }, { status });
 
@@ -39,6 +43,7 @@ export const shapeArtist = (a) => ({
   ...a,
   sub_skills: parseJson(a.sub_skills, []),
   languages: parseJson(a.languages, []),
+  portfolio_items: parseJson(a.portfolio_items, []),
   verified: !!a.verified,
   founding_artist: !!a.founding_artist,
 });

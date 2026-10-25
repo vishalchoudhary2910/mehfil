@@ -153,7 +153,7 @@ export default function BookFlow() {
               the artist only gets paid after the show is confirmed. Demo build: no real charge.
             </p>
           </div>
-          <div className="card">
+          <div className="card" style={{ overflowX: "auto" }}>
             <table className="compare-table">
               <tbody>
                 <tr><td>Package — {pkg.name} ({pkg.duration_hours} hrs)</td><td className="price" style={{ textAlign: "right" }}>{INR(amount)}</td></tr>

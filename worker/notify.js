@@ -73,7 +73,7 @@ export function digestMessage(s) {
   const lines = [
     `<b>Mehfil Leads — daily digest</b>`,
     `🆕 ${s.new_leads} new · ✅ ${s.verified} verified · ⛔ ${s.invalid} invalid`,
-    `🤝 ${s.matches} new matches · 📣 ${s.outreach} contacted`,
+    `🤝 ${s.matches} new matches · 📣 ${s.outreach} contacted${s.queued ? ` · ⏳ ${s.queued} queued for manual outreach` : ""}`,
     s.places_key ? `📍 Places sync: ${s.places_new} new, ${s.places_updated} updated` : `📍 Places sync: skipped (no key)`,
   ];
   if (s.expired || s.removed) {

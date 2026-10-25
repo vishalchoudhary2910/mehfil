@@ -66,6 +66,9 @@ export const ARTIST_DDL = `CREATE TABLE IF NOT EXISTS artist_profiles (
   hue INTEGER NOT NULL DEFAULT 265, instagram TEXT, youtube TEXT,
   area TEXT NOT NULL DEFAULT '', available_now INTEGER NOT NULL DEFAULT 1,
   accepting_requests INTEGER NOT NULL DEFAULT 1, directory_id TEXT, portfolio_url TEXT,
+  tagline TEXT NOT NULL DEFAULT '', layout_variant TEXT NOT NULL DEFAULT 'editorial',
+  website TEXT, portfolio_items TEXT NOT NULL DEFAULT '[]', rider_note TEXT NOT NULL DEFAULT '',
+  press_note TEXT NOT NULL DEFAULT '', accent_hue INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS users (

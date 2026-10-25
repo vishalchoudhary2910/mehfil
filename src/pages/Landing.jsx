@@ -17,6 +17,7 @@ function Hero() {
         <div className="row wrapline" style={{ gap: 8 }}>
           <span className="pill">🇮🇳 Launch city: Pune · Mumbai · Jaipur</span>
           <span className="pill">Escrow-protected bookings</span>
+          <span className="pill">⚡ Quick-match deck: swipe, match, chat in minutes</span>
         </div>
         <h1 className="mt-2">
           Hire, team up, and perform — the <em>operating system</em> for live and creative talent.
@@ -240,7 +241,7 @@ function FeaturedArtists() {
         <div className="grid grid-4">
           {artists.map((a) => (
             <Link key={a.id} to={`/artist/${a.slug}`} className="card card-hover artist-card" style={{ padding: 0, overflow: "hidden" }}>
-              <div className="cover" style={{ height: 90, borderRadius: 0, background: `linear-gradient(135deg, hsl(${a.hue} 62% 42%), hsl(${(a.hue + 52) % 360} 70% 54%))` }}>
+              <div className="cover" style={{ height: 90, borderRadius: 0, background: `linear-gradient(135deg, hsl(${a.hue}, 62%, 42%), hsl(${(a.hue + 52) % 360}, 70%, 54%))` }}>
                 <div className="who">
                   <div className="name">{a.stage_name}</div>
                   <div className="meta">{CATS[a.category]?.label} · {a.city}</div>
@@ -325,6 +326,40 @@ function JamsTeaser() {
   );
 }
 
+function VenueCTA() {
+  return (
+    <section className="section" style={{ paddingTop: 0 }}>
+      <div className="wrap">
+        <div
+          className="card"
+          style={{
+            background: "linear-gradient(135deg, #14202e, #1f3a2e)",
+            color: "#eaf4ee", padding: "34px", display: "flex",
+            gap: 22, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap",
+          }}
+        >
+          <div style={{ maxWidth: 560 }}>
+            <h2 style={{ color: "#fff" }}>Run a café, bar or restaurant? Hosting a party, wedding or fest?</h2>
+            <p className="small" style={{ color: "#b8d4c4", marginBottom: 0 }}>
+              Tell us the night in 60 seconds — occasion, date, place, budget — and get a shortlist of
+              verified local acts with rates, clips and availability. Birthdays, sangeets, house gigs,
+              open-mic nights, college fests: one brief, minutes to a reply.
+            </p>
+          </div>
+          <div className="row wrapline" style={{ gap: 10 }}>
+            <Link to="/venues" className="btn btn-primary btn-lg">
+              Get a free shortlist
+            </Link>
+            <Link to="/need" className="btn btn-ghost btn-lg" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+              Post a 60-sec gig brief
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ArtistCTA() {
   return (
     <section className="section" style={{ paddingTop: 0 }}>
@@ -371,6 +406,7 @@ export default function Landing() {
       <Trust />
       <ShowsTeaser />
       <JamsTeaser />
+      <VenueCTA />
       <ArtistCTA />
     </>
   );

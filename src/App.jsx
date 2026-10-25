@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Routes, Route, NavLink, useLocation, Navigate } from "react-router-dom";
 import { SignOutButton, useFreebuffUser } from "@freebuff/auth/react";
 import { useSession } from "./session.jsx";
@@ -20,12 +21,41 @@ import Need, { RequestStatus } from "./pages/Need.jsx";
 import Respond from "./pages/Respond.jsx";
 import TalentProfile from "./pages/TalentProfile.jsx";
 import Engines from "./pages/Engines.jsx";
+import Match from "./pages/Match.jsx";
+import Messages from "./pages/Messages.jsx";
+import Venues from "./pages/Venues.jsx";
+import Invite from "./pages/Invite.jsx";
 
 function Nav() {
   const { session } = useSession();
   const { user } = useFreebuffUser();
   const name = session?.user?.name || user?.name;
   const signedIn = !!session?.user;
+  const [menu, setMenu] = useState(false);
+  const { pathname } = useLocation();
+
+  // Close the drawer whenever the route changes (link tap, back/forward).
+  useEffect(() => { setMenu(false); }, [pathname]);
+
+  // Four core destinations stay in the bar; the menu carries every page.
+  // The strip must fit even with the widest signed-in controls, so it never
+  // grows past this set — the drawer is the single source of completeness.
+  const primary = [
+    ["/discover", "Find talent"],
+    ["/match", "Quick match"],
+    ["/need", "Need talent"],
+    ["/shows", "Shows"],
+  ];
+  const links = [
+    ...primary,
+    ["/venues", "For venues"],
+    ["/collab", "Collab board"],
+    ["/jams", "Jams"],
+  ];
+  if (session?.artist) links.push(["/dashboard", "Artist desk"]);
+  if (signedIn) {
+    links.push(["/messages", "Messages"], ["/bookings", "My bookings"], ["/leads", "Leads"], ["/engines", "Engines"]);
+  }
 
   return (
     <header className="nav">
@@ -34,44 +64,16 @@ function Nav() {
           Mehfil <span className="dot" />
         </NavLink>
         <nav className="nav-links">
-          <NavLink to="/discover" className={({ isActive }) => (isActive ? "active" : "")}>
-            Find talent
-          </NavLink>
-          <NavLink to="/need" className={({ isActive }) => (isActive ? "active" : "")}>
-            Need talent
-          </NavLink>
-          <NavLink to="/collab" className={({ isActive }) => (isActive ? "active" : "")}>
-            Collab board
-          </NavLink>
-          <NavLink to="/shows" className={({ isActive }) => (isActive ? "active" : "")}>
-            Shows
-          </NavLink>
-          <NavLink to="/jams" className={({ isActive }) => (isActive ? "active" : "")}>
-            Jams
-          </NavLink>
-          {session?.artist && (
-            <NavLink to="/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
-              Artist desk
+          {primary.map(([to, label]) => (
+            <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "active" : "")}>
+              {label}
             </NavLink>
-          )}
-          {signedIn && (
-            <>
-              <NavLink to="/bookings" className={({ isActive }) => (isActive ? "active" : "")}>
-                My bookings
-              </NavLink>
-              <NavLink to="/leads" className={({ isActive }) => (isActive ? "active" : "")}>
-                Leads
-              </NavLink>
-              <NavLink to="/engines" className={({ isActive }) => (isActive ? "active" : "")}>
-                Engines
-              </NavLink>
-            </>
-          )}
+          ))}
         </nav>
         <div className="right">
           {signedIn ? (
             <>
-              <NavLink to="/join" className="btn btn-ghost btn-sm">
+              <NavLink to="/join" className="btn btn-ghost btn-sm nav-join">
                 {session?.artist ? "My profile" : "List as an artist"}
               </NavLink>
               <span className="nav-user">
@@ -87,7 +89,32 @@ function Nav() {
               Sign in
             </SignInLink>
           )}
+          <button
+            className="nav-toggle"
+            aria-label={menu ? "Close menu" : "Open menu"}
+            aria-expanded={menu}
+            aria-controls="nav-panel"
+            onClick={() => setMenu((v) => !v)}
+          >
+            <span className="nav-toggle-label">Menu</span>
+            <span className="nav-toggle-icon" aria-hidden>{menu ? "✕" : "☰"}</span>
+          </button>
         </div>
+      </div>
+      <div id="nav-panel" className={`nav-panel ${menu ? "open" : ""}`}>
+        {links.map(([to, label]) => (
+          <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "active" : "")}>
+            {label}
+          </NavLink>
+        ))}
+        <NavLink to="/join" className={({ isActive }) => (isActive ? "active" : "")}>
+          {session?.artist ? "My profile" : "List as an artist"}
+        </NavLink>
+        {signedIn && (
+          <SignOutButton className="btn btn-ghost nav-panel-out" returnTo="/">
+            Sign out
+          </SignOutButton>
+        )}
       </div>
     </header>
   );
@@ -105,6 +132,9 @@ function Footer() {
             <NavLink to="/discover">Find talent</NavLink>
             <NavLink to="/collab">Collab board</NavLink>
             <NavLink to="/shows">Shows near you</NavLink>
+            <NavLink to="/match">Quick-match deck</NavLink>
+            <NavLink to="/venues">For venues & occasions</NavLink>
+            <NavLink to="/invite">Invite fellow artists</NavLink>
             <NavLink to="/jams">Jam circles</NavLink>
             <NavLink to="/bookings">My bookings</NavLink>
             <NavLink to="/in">City guides</NavLink>
@@ -182,6 +212,11 @@ export default function App() {
           <Route path="/request/:token" element={<RequestStatus />} />
           <Route path="/respond/:token" element={<Respond />} />
           <Route path="/talent/:slug" element={<TalentProfile />} />
+          <Route path="/match" element={<RequireAuth><Match /></RequireAuth>} />
+          <Route path="/messages" element={<RequireAuth><Messages /></RequireAuth>} />
+          <Route path="/messages/:id" element={<RequireAuth><Messages /></RequireAuth>} />
+          <Route path="/venues" element={<Venues />} />
+          <Route path="/invite" element={<Invite />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

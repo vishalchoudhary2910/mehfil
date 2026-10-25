@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
 import { INR, CATS, StatusPill, Empty, Stars, Avatar } from "../ui.jsx";
 
 export default function Dashboard() {
-  const { session, notify } = useSession();
+  const { session, notify, refresh } = useSession();
+  const [params] = useSearchParams();
   const [d, setD] = useState(null);
   const [invites, setInvites] = useState(null);
   const [avail, setAvail] = useState(null);
-  const [tab, setTab] = useState("requests");
+  const [tab, setTab] = useState(params.get("tab") === "design" ? "design" : "requests");
   const [busy, setBusy] = useState(false);
 
   const load = () => api("/api/artist/bookings").then(setD).catch(() => setD({ error: true }));
@@ -106,10 +107,12 @@ export default function Dashboard() {
       </div>
 
       <div className="tabs mt-3">
-        {[["requests", `Requests (${incoming.length})`], ["gigs", `Gig requests (${(invites || []).length})`], ["upcoming", `Upcoming (${upcoming.length})`], ["done", `History (${done.length})`], ["reviews", "Reviews"]].map(([k, label]) => (
+        {[["requests", `Requests (${incoming.length})`], ["gigs", `Gig requests (${(invites || []).length})`], ["upcoming", `Upcoming (${upcoming.length})`], ["done", `History (${done.length})`], ["reviews", "Reviews"], ["design", "Profile design"]].map(([k, label]) => (
           <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>
         ))}
       </div>
+
+      {tab === "design" && <DesignTab artist={a} notify={notify} refresh={refresh} />}
 
       {tab === "gigs" && (
         <div className="stack" style={{ gap: 12 }}>
@@ -220,6 +223,187 @@ export default function Dashboard() {
         <strong>Anti-leakage by design:</strong> escrow, contracts and review counts only accrue on
         bookings paid inside Mehfil. Clients who see your profile link in your Instagram bio land
         here — run them through it and your rating compounds.
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- profile v2 ---
+// Every act should look like itself: pick a layout voice, an accent, a tagline,
+// and add the real work (videos, tracks, press, links) hosts decide on.
+const VARIANTS = [
+  ["editorial", "Magazine", "Story first — bio leads"],
+  ["showreel", "Showreel", "Work first — videos lead"],
+  ["gallery", "Gallery", "Portfolio grid up top"],
+  ["credits", "Credits", "Numbers, gigs & press first"],
+  ["service", "Services", "Packages first — book fast"],
+];
+const ACCENTS = [265, 20, 340, 28, 160, 200, 45, 300];
+const ITEM_KINDS = [["video", "Video"], ["music", "Audio"], ["press", "Press"], ["image", "Gallery"], ["link", "Link"]];
+
+function DesignTab({ artist: a, notify, refresh }) {
+  const [f, setF] = useState({
+    tagline: a.tagline || "",
+    layout_variant: a.layout_variant || "editorial",
+    accent_hue: Number(a.accent_hue) > 0 ? Number(a.accent_hue) : Number(a.hue || 265),
+    website: a.website || "",
+    instagram: a.instagram || "",
+    youtube: a.youtube || "",
+    portfolio_url: a.portfolio_url || "",
+    bio: a.bio || "",
+    rider_note: a.rider_note || "",
+    press_note: a.press_note || "",
+  });
+  const [items, setItems] = useState(Array.isArray(a.portfolio_items) ? a.portfolio_items : []);
+  const [busy, setBusy] = useState(false);
+
+  const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+  const setItem = (i, k, v) => setItems((ps) => ps.map((p, idx) => (idx === i ? { ...p, [k]: v } : p)));
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api("/api/artist/design", {
+        method: "POST",
+        body: JSON.stringify({ ...f, accent_hue: Number(f.accent_hue), portfolio_items: items }),
+      });
+      await refresh();
+      notify("Profile design saved — it's live on your public page.");
+    } catch (e) {
+      notify(e.message, "err");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="stack" style={{ gap: 14 }}>
+      <div className="card form-grid">
+        <div className="field full">
+          <label>Tagline — one line hosts remember you by</label>
+          <input className="input" maxLength={140} placeholder="Bollywood acoustic sets that turn dinners into dance floors" value={f.tagline} onChange={set("tagline")} />
+          <span className="field-hint">Shown in italics on your profile, in the swipe deck, and in match cards.</span>
+        </div>
+        <div className="field full">
+          <label>Layout voice</label>
+          <div className="grid grid-3" style={{ gap: 8 }}>
+            {VARIANTS.map(([key, name, hint]) => (
+              <div
+                key={key}
+                className={`chip ${f.layout_variant === key ? "on" : ""}`}
+                style={{ justifyContent: "flex-start", padding: "9px 13px" }}
+                onClick={() => setF((s) => ({ ...s, layout_variant: key }))}
+              >
+                <span style={{ fontWeight: 700 }}>{name}</span>
+                <span className="tiny" style={{ opacity: 0.75 }}>{hint}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="field full">
+          <label>Accent color</label>
+          <div className="row wrapline" style={{ gap: 9 }}>
+            {ACCENTS.map((h) => (
+              <span
+                key={h}
+                onClick={() => setF((s) => ({ ...s, accent_hue: h }))}
+                title={`Hue ${h}`}
+                style={{
+                  width: 30, height: 30, borderRadius: "50%", cursor: "pointer", display: "inline-block",
+                  background: `hsl(${h}, 62%, 46%)`,
+                  boxShadow: Number(f.accent_hue) === h ? "0 0 0 3px #fff, 0 0 0 5px #17101f" : "none",
+                }}
+              />
+            ))}
+            <input
+              type="range" min="0" max="359" value={f.accent_hue}
+              onChange={(e) => setF((s) => ({ ...s, accent_hue: Number(e.target.value) }))}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+          </div>
+          <span className="field-hint">Drives your stripe, section markers and link highlights. Light and clean by design.</span>
+        </div>
+        <div className="field full">
+          <label>Bio</label>
+          <textarea className="textarea" maxLength={2000} placeholder="What you play, where you've played, what a gig with you feels like" value={f.bio} onChange={set("bio")} />
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="row between wrapline">
+          <div>
+            <b>Portfolio & work</b>
+            <div className="small muted">Real links hosts can click: videos, tracks, press, galleries.</div>
+          </div>
+          {items.length < 12 && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setItems((ps) => [...ps, { kind: "video", title: "", url: "", note: "" }])}>
+              + Add work item
+            </button>
+          )}
+        </div>
+        {!items.length && (
+          <p className="small muted mt-2 mb-0">Nothing added yet — even one live clip converts better than a text bio.</p>
+        )}
+        <div className="stack mt-2">
+          {items.map((p, i) => (
+            <div key={i} className="form-grid" style={{ alignItems: "end" }}>
+              <div className="field">
+                <label>Type</label>
+                <select className="select" value={p.kind} onChange={(e) => setItem(i, "kind", e.target.value)}>
+                  {ITEM_KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>Title</label>
+                <input className="input" placeholder="Live at Cafe Kapi" value={p.title} onChange={(e) => setItem(i, "title", e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Link</label>
+                <input className="input" placeholder="https://…" value={p.url} onChange={(e) => setItem(i, "url", e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Note (optional)</label>
+                <div className="row" style={{ gap: 8 }}>
+                  <input className="input" placeholder="Acoustic duo, 45 min" value={p.note} onChange={(e) => setItem(i, "note", e.target.value)} />
+                  <button className="btn btn-danger btn-sm" onClick={() => setItems((ps) => ps.filter((_, idx) => idx !== i))}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card form-grid">
+        <div className="field">
+          <label>Website</label>
+          <input className="input" placeholder="https://your-site.example" value={f.website} onChange={set("website")} />
+        </div>
+        <div className="field">
+          <label>Portfolio link</label>
+          <input className="input" placeholder="https://…" value={f.portfolio_url} onChange={set("portfolio_url")} />
+        </div>
+        <div className="field">
+          <label>Instagram</label>
+          <input className="input" placeholder="@handle" value={f.instagram} onChange={set("instagram")} />
+        </div>
+        <div className="field">
+          <label>YouTube</label>
+          <input className="input" placeholder="@handle or URL" value={f.youtube} onChange={set("youtube")} />
+        </div>
+        <div className="field">
+          <label>Rider note (optional)</label>
+          <input className="input" placeholder="Needs 2 monitored monitors, DI boxes" value={f.rider_note} onChange={set("rider_note")} />
+        </div>
+        <div className="field">
+          <label>Press / brag line (optional)</label>
+          <input className="input" placeholder="Featured at NH7 Weekender 2025" value={f.press_note} onChange={set("press_note")} />
+        </div>
+        <div className="full row between mt-1">
+          <Link to={`/artist/${a.slug}`} className="small" style={{ textDecoration: "underline" }}>Preview public page →</Link>
+          <button className="btn btn-primary btn-lg" disabled={busy} onClick={save}>
+            {busy ? "Saving…" : "Save design"}
+          </button>
+        </div>
       </div>
     </div>
   );

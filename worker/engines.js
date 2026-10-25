@@ -12,6 +12,7 @@ import { ensureTalentSchema, runTalentRadar } from "./talent.js";
 import { ensureShowSchema, feedUrls, runShowFeed } from "./showfeed.js";
 import { ensureRequestSchema, runAlerts, runRequestFollowups } from "./requests.js";
 import { ensureJamSchema, runJamSweep } from "./jam.js";
+import { ensureLifecycleSchema, runLifecycle } from "./lifecycle.js";
 import { notify, telegramConfigured } from "./notify.js";
 import { resolveUser, isWorkspaceOwner } from "./util.js";
 import { isSameOriginRequest } from "@freebuff/auth";
@@ -39,12 +40,13 @@ async function ensureAll(env) {
   await ensureShowSchema(env);
   await ensureRequestSchema(env);
   await ensureJamSchema(env);
+  await ensureLifecycleSchema(env);
   await ensureEngineSchema(env);
 }
 
 const changes = (r) => Number(r?.meta?.changes ?? r?.changes ?? 0);
 
-export async function runDailyEngines(env, { trigger = "cron", silent = false, scopes = ["talent", "shows", "leads", "requests", "jams"] } = {}) {
+export async function runDailyEngines(env, { trigger = "cron", silent = false, scopes = ["talent", "shows", "leads", "requests", "jams", "lifecycle"] } = {}) {
   await ensureAll(env);
   const db = env.DB;
   const out = {
@@ -77,6 +79,9 @@ export async function runDailyEngines(env, { trigger = "cron", silent = false, s
   }
   if (scopes.includes("jams")) {
     out.jams = await attempt("jams", () => runJamSweep(env, { trigger }));
+  }
+  if (scopes.includes("lifecycle")) {
+    out.lifecycle = await attempt("lifecycle", () => runLifecycle(env, { trigger, now: Date.now() }));
   }
   out.ok = out.errors.length === 0;
 
@@ -114,7 +119,7 @@ export function engineDigest(out, env = {}) {
       : `📅 Shows: 🆕 ${s.created || 0} · ♻️ ${s.updated || 0} updated · ⌛ ${s.past || 0} past`,
     l.error
       ? `🤝 Leads: failed — ${String(l.error).slice(0, 90)}`
-      : `🤝 Leads: ${l.new_leads || 0} new · ✅ ${l.verified || 0} verified · 📣 ${l.outreach || 0} contacted`,
+      : `🤝 Leads: ${l.new_leads || 0} new · ✅ ${l.verified || 0} verified · 📣 ${l.outreach || 0} contacted${l.queued ? ` · ⏳ ${l.queued} queued` : ""}`,
     `📨 Gig requests: ${f.requests || 0} open · ${f.nudged || 0} nudged · ${f.expired || 0} expired · 🔔 ${f.fired || 0} alerts fired`,
     out.jams ? `🎸 Jam circles: ${out.jams.expired || 0} retired · ${out.jams.purged || 0} purged` : "",
     !telegramConfigured(env) && !env.RESEND_API_KEY ? "⚙️ Add Telegram or RESEND keys to receive these outside the console." : "",

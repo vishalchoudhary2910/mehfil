@@ -9,7 +9,7 @@
     "test": "node --test tests/*.test.mjs",
     "preview": "npm run build && wrangler dev",
     "start": "npm run build && wrangler dev",
-    "seed:local": "wrangler d1 execute mehfil --local --file=./schema.sql && wrangler d1 execute mehfil --local --file=./seed.sql",
+    "seed:local": "wrangler d1 execute mehfil --local --persist-to C:/mehfil-state --file=./schema.sql && wrangler d1 execute mehfil --local --persist-to C:/mehfil-state --file=./seed.sql",
     "engines:local": "node scripts/run-engines.mjs"
   },
   "dependencies": {

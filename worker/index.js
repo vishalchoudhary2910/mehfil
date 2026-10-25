@@ -11,6 +11,9 @@ import { mountRequestRoutes } from "./requests.js";
 import { mountJamRoutes, ensureJamSchema, runJamSweep } from "./jam.js";
 import { mountSearchRoutes } from "./search.js";
 import { mountEngineRoutes, runDailyEngines, runFrequentEngines } from "./engines.js";
+import { mountDeckRoutes, ensureDeckSchema } from "./deck.js";
+import { mountGrowthRoutes, ensureGrowthSchema, markListed } from "./growth.js";
+import { mountLifecycleRoutes, ensureLifecycleSchema, runLifecycle } from "./lifecycle.js";
 
 // Web Crypto's randomUUID is global in Workers — no node:crypto import.
 const randomUUID = () => crypto.randomUUID();
@@ -181,6 +184,7 @@ const shapeArtist = (a) => ({
   ...a,
   sub_skills: parseJson(a.sub_skills, []),
   languages: parseJson(a.languages, []),
+  portfolio_items: parseJson(a.portfolio_items, []),
   verified: !!a.verified,
   founding_artist: !!a.founding_artist,
 });
@@ -219,9 +223,16 @@ export default {
     await ensureTalentSchema(env);
     await ensureShowSchema(env);
     await ensureJamSchema(env);
+    await ensureDeckSchema(env);
+    await ensureGrowthSchema(env);
+    await ensureLifecycleSchema(env);
     // Retire finished jams on every tick so stale rows never linger.
     await runJamSweep(env, { trigger: "cron" });
-    if (String(event.cron || "") === "0 */4 * * *") {
+    const cron = String(event.cron || "");
+    if (cron === "0 * * * *") {
+      // Hourly lifecycle tick: shortlist and rebook sends, quiet-hours gated.
+      await runLifecycle(env, { trigger: "cron-hourly" });
+    } else if (cron === "0 */4 * * *") {
       await runFrequentEngines(env, { trigger: "cron" });
     } else {
       await runDailyEngines(env, { trigger: "cron" });
@@ -250,6 +261,9 @@ export default {
     await ensureTalentSchema(env);
     await ensureShowSchema(env);
     await ensureJamSchema(env);
+    await ensureDeckSchema(env);
+    await ensureGrowthSchema(env);
+    await ensureLifecycleSchema(env);
     const db = env.DB;
 
     // Server-rendered SEO landing pages: /in/:city/:category/:event, hub, sitemap.
@@ -437,8 +451,59 @@ export default {
           .run();
       }
       await db.prepare("UPDATE users SET kind = 'artist', city = COALESCE(city, ?) WHERE id = ?").bind(city, me.id).run();
+      // Referral loop: completing a listing is what counts for the inviter.
+      await markListed(db, me.id).catch(() => null);
       const created = await db.prepare("SELECT * FROM artist_profiles WHERE id = ?").bind(id).first();
       return json({ artist: shapeArtist(created) });
+    });
+
+    // ----- profile v2 design: tagline, layout variant, portfolio, links ----
+    app.post("/api/artist/design", async (c) => {
+      if (!isSameOriginRequest(c.req.raw, env.APP_ORIGIN)) return err(403, "Cross-origin");
+      const fbUser = await auth.getUser(c.req.raw);
+      if (!fbUser) return err(401, "Sign in required");
+      const me = await resolveUser(db, fbUser);
+      const artist = await artistForUser(db, me.id);
+      if (!artist) return err(403, "No artist profile");
+      const b = await c.req.json().catch(() => ({}));
+      const variants = ["editorial", "showreel", "gallery", "credits", "service"];
+      const variant = variants.includes(b.layout_variant) ? b.layout_variant : artist.layout_variant || "editorial";
+      const portfolio = Array.isArray(b.portfolio_items)
+        ? b.portfolio_items.slice(0, 12).map((p) => ({
+            title: String(p?.title || "").slice(0, 90),
+            url: String(p?.url || "").slice(0, 400),
+            kind: ["video", "music", "press", "image", "link"].includes(p?.kind) ? p.kind : "link",
+            note: String(p?.note || "").slice(0, 200),
+          }))
+        : artist.portfolio_items;
+      const cleanUrl = (u) => {
+        const s = String(u || "").trim().slice(0, 400);
+        if (!s) return null;
+        return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+      };
+      await db
+        .prepare(
+          `UPDATE artist_profiles SET tagline = ?, layout_variant = ?, website = ?, portfolio_items = ?,
+             rider_note = ?, press_note = ?, accent_hue = ?, bio = ?, instagram = ?, youtube = ?, portfolio_url = ?
+           WHERE id = ?`
+        )
+        .bind(
+          String(b.tagline ?? (artist.tagline || "")).slice(0, 140),
+          variant,
+          cleanUrl(b.website ?? artist.website),
+          JSON.stringify(portfolio || []),
+          String(b.rider_note ?? (artist.rider_note || "")).slice(0, 500),
+          String(b.press_note ?? (artist.press_note || "")).slice(0, 240),
+          Math.max(0, Math.min(360, Number(b.accent_hue) || 0)),
+          String(b.bio ?? (artist.bio || "")).slice(0, 2000),
+          String(b.instagram ?? (artist.instagram || "")).trim().slice(0, 120) || null,
+          String(b.youtube ?? (artist.youtube || "")).trim().slice(0, 160) || null,
+          cleanUrl(b.portfolio_url ?? artist.portfolio_url),
+          artist.id
+        )
+        .run();
+      const fresh = await db.prepare("SELECT * FROM artist_profiles WHERE id = ?").bind(artist.id).first();
+      return json({ artist: shapeArtist(fresh) });
     });
 
     // ----- booking creation: instant-book a package, advance into escrow (plan flow B)
@@ -794,12 +859,15 @@ export default {
     mountJamRoutes(app, auth);
     mountSearchRoutes(app);
     mountEngineRoutes(app, auth);
+    mountDeckRoutes(app, auth);
+    mountGrowthRoutes(app, auth);
+    mountLifecycleRoutes(app);
     mountExtraRoutes(app, auth);
     const handler = auth.wrap(app.fetch);
     const res = await handler(request, env);
     const p = new URL(request.url).pathname;
     const owns404 = p.startsWith("/api/") || p === "/in" || p.startsWith("/in/") ||
-      p === "/sitemap.xml" || p === "/robots.txt";
+      p === "/sitemap.xml" || p === "/robots.txt" || p === "/unsubscribe";
     if (res.status === 404 && !owns404) {
       return env.ASSETS.fetch(request);
     }

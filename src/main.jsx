@@ -14,3 +14,11 @@ createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Installable app (home screen / APK-style): register the service worker late
+// and swallow failures — a blocked SW must never affect the app itself.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => null);
+  });
+}

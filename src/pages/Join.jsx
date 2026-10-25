@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
 import { INR, CATS, Empty } from "../ui.jsx";
 
@@ -12,6 +12,8 @@ const LANGS = ["Hindi", "English", "Marathi", "Punjabi", "Gujarati", "Bengali", 
 export default function Join() {
   const nav = useNavigate();
   const { session, refresh, notify } = useSession();
+  const [params] = useSearchParams();
+  const claimedRef = useRef(false);
   const [step, setStep] = useState(1);
   const [quoteMode, setQuoteMode] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -19,7 +21,18 @@ export default function Join() {
     stage_name: "", category: "dj", city: "Pune", area: "", bio: "",
     experience_years: 3, travel_radius_km: 25, cancellation_policy: "moderate",
     sub_skills: [], languages: ["Hindi", "English"], instagram: "", youtube: "", portfolio_url: "",
+    tagline: "",
   });
+
+  // A ?ref=CODE visit is an artist-invite attribution — claim it once signed in.
+  useEffect(() => {
+    const ref = params.get("ref");
+    if (!ref || !session?.user || claimedRef.current) return;
+    claimedRef.current = true;
+    api("/api/referral/claim", { method: "POST", body: JSON.stringify({ code: ref }) })
+      .then(() => notify("Invite code applied — welcome aboard!"))
+      .catch(() => null);
+  }, [params, session, notify]);
   const [pkgs, setPkgs] = useState([
     { name: "", price_inr: "", duration_hours: 3, description: "", inclusions: [] },
   ]);
@@ -62,6 +75,13 @@ export default function Join() {
             .map((p) => ({ ...p, price_inr: Number(p.price_inr), duration_hours: Number(p.duration_hours) || 3 })),
         }),
       });
+      // Profile design rides on the design endpoint — tagline goes live with it.
+      if (f.tagline.trim()) {
+        await api("/api/artist/design", {
+          method: "POST",
+          body: JSON.stringify({ tagline: f.tagline.trim() }),
+        }).catch(() => null);
+      }
       await refresh();
       notify("Profile live! You're visible in discovery now.");
       nav(`/artist/${artist.slug}`);
@@ -128,6 +148,11 @@ export default function Join() {
                 </span>
               ))}
             </div>
+          </div>
+          <div className="field full">
+            <label>Tagline (optional) — one line hosts remember</label>
+            <input className="input" maxLength={140} placeholder="Bollywood acoustic sets that turn dinners into dance floors" value={f.tagline} onChange={set("tagline")} />
+            <span className="field-hint">Shown on your profile page and in the quick-match deck. Editable anytime from the Artist desk.</span>
           </div>
           <div className="field full">
             <label>Bio</label>

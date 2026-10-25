@@ -5,11 +5,13 @@
 
 export const emailConfigured = (env) => !!(env.RESEND_API_KEY && env.RESEND_FROM);
 
-export async function sendEmail(env, { to, subject, text, replyTo }) {
+export async function sendEmail(env, { to, subject, text, replyTo, headers }) {
   if (!to) return { sent: false, reason: "no_recipient" };
   if (!emailConfigured(env)) return { sent: false, reason: "no_provider" };
+  // env.fetch is a test seam only; Workers use the global fetch.
+  const doFetch = typeof env.fetch === "function" ? env.fetch : fetch;
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await doFetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -21,6 +23,7 @@ export async function sendEmail(env, { to, subject, text, replyTo }) {
         subject: subject.slice(0, 180),
         text,
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(headers && Object.keys(headers).length ? { headers } : {}),
       }),
     });
     if (!res.ok) {
@@ -45,13 +48,6 @@ export function composeOutreach(lead, actor = "Mehfil") {
     `No commitment. Just reply with the vibe and date range you have in mind.\n\n` +
     `— ${actor}, Mehfil`;
   return { subject, text };
-}
-
-export async function sendOutreachEmail(env, lead, actor) {
-  if (!lead.email) return { sent: false, reason: "no_email" };
-  if (!emailConfigured(env)) return { sent: false, reason: "no_provider" };
-  const { subject, text } = composeOutreach(lead, actor);
-  return sendEmail(env, { to: lead.email, subject, text });
 }
 
 // ---------------------------------------------------------- gig requests ---

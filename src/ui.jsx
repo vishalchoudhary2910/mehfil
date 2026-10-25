@@ -13,7 +13,7 @@ export const catOptions = (includeOther = true) =>
   CATEGORY_KEYS.filter((k) => includeOther || k !== "other").map((k) => ({ key: k, ...CATEGORIES[k] }));
 
 export const hueStyle = (hue, deg = 135) => ({
-  background: `linear-gradient(${deg}deg, hsl(${hue} 62% 46%), hsl(${(hue + 52) % 360} 72% 56%))`,
+  background: `linear-gradient(${deg}deg, hsl(${hue}, 62%, 46%), hsl(${(hue + 52) % 360}, 72%, 56%))`,
 });
 
 export const initials = (name) =>

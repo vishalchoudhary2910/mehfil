@@ -99,7 +99,10 @@ export default function Leads() {
     setBusy(true);
     try {
       if (type === "verify") { await api(`/api/leads/${l.id}/verify`, { method: "POST" }); notify(`Checked ${l.name}`); }
-      else if (type === "approve") { await api(`/api/leads/${l.id}/approve`, { method: "POST" }); notify(`Outreach logged for ${l.name}`); }
+      else if (type === "approve") {
+        const r = await api(`/api/leads/${l.id}/approve`, { method: "POST" });
+        notify(r.queued ? `Queued for one-to-one outreach — no cold email sent` : `Outreach emailed to ${l.name}`);
+      }
       else if (type === "invalid") { await api(`/api/leads/${l.id}`, { method: "PATCH", body: JSON.stringify({ verification: "invalid" }) }); notify(`Marked ${l.name} invalid`); }
       load(); loadMeta();
     } catch (e) { notify(e.message, "err"); }
@@ -108,7 +111,7 @@ export default function Leads() {
 
   const runPipeline = async () => {
     setBusy(true);
-    try { const r = await api("/api/leads/run", { method: "POST" }); setRun(r); notify(`Pipeline: ${r.verified} verified, ${r.invalid} invalid, ${r.outreach} contacted`); load(); loadMeta(); }
+    try { const r = await api("/api/leads/run", { method: "POST" }); setRun(r); notify(`Pipeline: ${r.verified} verified, ${r.invalid} invalid, ${r.outreach} emailed, ${r.queued || 0} queued`); load(); loadMeta(); }
     catch (e) { notify(e.message, "err"); }
     setBusy(false);
   };
@@ -133,7 +136,7 @@ export default function Leads() {
     setBusy(false);
   };
   const setMode = async (mode) => {
-    try { await api("/api/leads/settings", { method: "POST", body: JSON.stringify({ outreach_mode: mode }) }); setMeta((m) => ({ ...m, outreach_mode: mode })); notify(`Outreach mode: ${mode === "auto" ? "full-auto" : "human-approved"}`); }
+    try { await api("/api/leads/settings", { method: "POST", body: JSON.stringify({ outreach_mode: mode }) }); setMeta((m) => ({ ...m, outreach_mode: mode })); notify(`Outreach mode: ${mode === "auto" ? "auto-queue" : "human-approved"}`); }
     catch (e) { notify(e.message, "err"); }
   };
 
@@ -151,7 +154,7 @@ export default function Leads() {
           <div className="kicker">Lead Engine</div>
           <h2>Leads &amp; automation</h2>
           <p className="small muted" style={{ margin: "4px 0 0" }}>
-            Venues from Places, artists who self-register, and client enquiries — verified, filtered, and matched. Sourced compliantly; outbound is human-approved unless you switch it to full-auto.
+            Venues from Places, artists who self-register, and client enquiries — verified, filtered, and matched. Cold outreach is never emailed: it is queued for one-to-one contact, or emailed only when that address has explicit consent.
           </p>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
@@ -239,8 +242,8 @@ export default function Leads() {
         <div className="field" style={{ minWidth: 190 }}>
           <label>Outreach mode</label>
           <select className="select" value={meta?.outreach_mode || "manual"} onChange={(e) => setMode(e.target.value)}>
-            <option value="manual">Half-auto (approve to send)</option>
-            <option value="auto">Full-auto (auto-contact)</option>
+            <option value="manual">Human-approved (one-to-one)</option>
+            <option value="auto">Auto-queue verified leads</option>
           </select>
         </div>
       </div>
