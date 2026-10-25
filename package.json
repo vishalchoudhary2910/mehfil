@@ -9,7 +9,7 @@
     "test": "node --test tests/*.test.mjs",
     "preview": "npm run build && node scripts/local.mjs dev",
     "start": "npm run build && node scripts/local.mjs dev",
-    "dev:worker": "node scripts/local.mjs dev",
+    "dev:worker": "npm run build && node scripts/local.mjs dev",
     "seed:local": "node scripts/local.mjs seed",
     "engines:local": "node scripts/run-engines.mjs"
   },

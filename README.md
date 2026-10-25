@@ -80,7 +80,7 @@ see [Auth setup](#auth-setup-local--production).
 ### Development mode (hot reload)
 
 ```bash
-# Terminal 1 — API on :8787, using the same seeded state as npm start
+# Terminal 1 — build once, then API on :8787 with the same seeded state as npm start
 npm run dev:worker
 
 # Terminal 2 — Vite dev server on :5173 (proxies /api → :8787)
