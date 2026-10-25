@@ -64,6 +64,10 @@ public claim page with no configuration at all.
 The **auth-gated** pages (booking, artist desk, leads, engine room) require a Freebuff session —
 see [Auth setup](#auth-setup-local--production).
 
+> **Windows note:** run `vite build` *before* starting (or after stopping) `wrangler dev`.
+> Rebuilding `dist` while its asset watcher is live can trip an `EBUSY` watcher error and
+> serve 404s for `index.html` until the worker restarts.
+
 ### Development mode (hot reload)
 
 ```bash
