@@ -7,6 +7,7 @@
 //   <dir>/v3/d1/miniflare-D1DatabaseObject/<hash>.sqlite
 // With no --db the script looks there and in .wrangler/state.
 import { readdirSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { openD1 } from "./local-db.mjs";
 import { ensureTalentSchema, runTalentRadar } from "../worker/talent.js";
@@ -24,7 +25,12 @@ const flag = (name, fallback = null) => {
 function findDb() {
   const explicit = flag("db") || process.env.MEHFIL_SQLITE;
   if (explicit) return explicit;
-  const roots = [".wrangler/state/v3/d1/miniflare-D1DatabaseObject", "C:/mehfil-state/v3/d1/miniflare-D1DatabaseObject"];
+  const roots = [
+    process.env.MEHFIL_STATE && join(process.env.MEHFIL_STATE, "v3/d1/miniflare-D1DatabaseObject"),
+    ".wrangler/state/v3/d1/miniflare-D1DatabaseObject",
+    join(homedir(), ".mehfil", "state", "v3/d1/miniflare-D1DatabaseObject"),
+    "C:/mehfil-state/v3/d1/miniflare-D1DatabaseObject", // legacy Windows shortcut
+  ].filter(Boolean);
   for (const root of roots) {
     try {
       const hit = readdirSync(root).filter((f) => f.endsWith(".sqlite")).map((f) => join(root, f))

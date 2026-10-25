@@ -42,21 +42,28 @@ Security model, OWASP mapping and production hardening: [**SECURITY.md**](SECURI
 
 ## Quick start (clone → running in 5 minutes)
 
+Requires **Node 22+** and npm.
+
 ```bash
 # 1. Clone and install
-git clone https://github.com/<you>/<repo>.git
-cd <repo>
+git clone https://github.com/vishalchoudhary2910/mehfil.git
+cd mehfil
 npm install
 
 # 2. Seed the local database with demo data
 npm run seed:local
 
 # 3. Start the API + built SPA on :8787
-npm run start          # = npm run build && wrangler dev
+npm run start          # = npm run build && node scripts/local.mjs dev
 ```
 
 Open **http://127.0.0.1:8787** — you'll see the landing page, discovery, shows, jams and the
 public claim page with no configuration at all.
+
+Both commands use the same local D1 state (`.wrangler/state`). On Windows checkouts whose
+absolute path is long, the helper reuses an existing `C:/mehfil-state` if present, otherwise it
+stores state in `%USERPROFILE%\.mehfil\state` to stay under `MAX_PATH`; set `MEHFIL_STATE` to a
+short path to override it. The path is printed every time you seed or start.
 
 > **No `.dev.vars`? No problem.** The Worker boots without `FREEBUFF_CLIENT_ID`: every public
 > route serves normally, and the auth-gated APIs answer an honest `401` instead of crashing.
@@ -66,24 +73,23 @@ public claim page with no configuration at all.
 The **auth-gated** pages (booking, artist desk, leads, engine room) require a Freebuff session —
 see [Auth setup](#auth-setup-local--production).
 
-> **Windows note:** run `vite build` *before* starting (or after stopping) `wrangler dev`.
-> Rebuilding `dist` while its asset watcher is live can trip an `EBUSY` watcher error and
-> serve 404s for `index.html` until the worker restarts.
+> **Windows note:** `npm run start` builds before starting. Rebuilding `dist` while a
+> `wrangler dev` asset watcher is live can trip an `EBUSY` watcher error and serve 404s for
+> `index.html` until the worker restarts. Stop the worker, build, then start it again.
 
 ### Development mode (hot reload)
 
 ```bash
-# Terminal 1 — API on :8787 (this machine's local dev DB lives in C:/mehfil-state)
-npx wrangler dev --persist-to C:/mehfil-state --port 8787
+# Terminal 1 — API on :8787, using the same seeded state as npm start
+npm run dev:worker
 
 # Terminal 2 — Vite dev server on :5173 (proxies /api → :8787)
 npm run dev
 ```
 
-**Windows note:** this workspace path is long; the default local D1 path can exceed `MAX_PATH`
-(260) and make workerd fail with a generic `internal error`. Always pass `--persist-to` a short
-path (like `C:/mehfil-state`) to `wrangler dev` and `wrangler d1 execute --local`. The
-project's `seed:local` script already passes it.
+`npm run dev:worker` forwards extra Wrangler flags, so `npm run dev:worker -- --port 8788`
+works too. On long Windows paths the state directory falls back to `%USERPROFILE%\.mehfil\state`;
+set `MEHFIL_STATE` to choose a different location.
 
 ---
 
@@ -117,8 +123,8 @@ Each engine fails independently: one bad feed never stops the others. Every run 
 ### Run engines locally against the dev database
 
 ```bash
-# Run all engines against the persisted local D1
-npm run engines:local -- --db C:/tmp/mf/v3/d1/miniflare-D1DatabaseObject/<hash>.sqlite
+# Run all engines against the persisted local D1 (path printed by seed/start)
+npm run engines:local -- --db .wrangler/state/v3/d1/miniflare-D1DatabaseObject/<hash>.sqlite
 
 # Run a single scope
 npm run engines:local -- --db … --scope talent
@@ -245,6 +251,7 @@ shared/
   categories.js             single taxonomy (worker + SPA import the same file)
 
 scripts/
+  local.mjs                 cross-platform seed + wrangler dev on one state dir
   run-engines.mjs           run engines locally against a persisted D1 file
   local-db.mjs              node:sqlite D1 shim for the runner
 

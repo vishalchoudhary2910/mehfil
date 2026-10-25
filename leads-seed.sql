@@ -2,7 +2,8 @@
 -- client enquiries across Pune / Mumbai / Jaipur, with mixed verification so
 -- the "verified-first" ordering and the review queue are both visible.
 -- Load into the live dev D1 with:
---   npx wrangler d1 execute mehfil --local --persist-to C:/tmp/mf --file=./leads-seed.sql
+--   npx wrangler d1 execute mehfil --local --persist-to .wrangler/state --file=./leads-seed.sql
+--   (use the "local state" path printed by npm run seed:local if you overrode it)
 
 DELETE FROM lead_events;
 DELETE FROM lead_interests;
