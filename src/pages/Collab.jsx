@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { INR, Empty, Avatar, SignInLink, qs } from "../ui.jsx";
+import { INR, Empty, Avatar, SignInLink, qs, usePageMeta } from "../ui.jsx";
 
 const dateFmt = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 
 export default function Collab() {
+  usePageMeta(
+    "Find bandmates & collaborators — Mehfil",
+    "Post what you play and what you need, apply to open calls, and build a band or a one-off collab with musicians near you."
+  );
   const [params, setParams] = useSearchParams();
   const { session, notify } = useSession();
   const [posts, setPosts] = useState(null);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
+import { usePageMeta } from "../ui.jsx";
 
 const KINDS = [
   ["cafe", "☕", "Café / coffee shop", "Weekly live sets, acoustic evenings"],
@@ -21,6 +22,10 @@ const STEPS = [
 
 export default function Venues() {
   const { session, notify } = useSession();
+  usePageMeta(
+    "Live performers for cafés, parties & weddings — Mehfil",
+    "Tell us the night once. Get a free shortlist of verified local performers with rates, clips and availability — DJs, singers, bands, poets, anchors and more."
+  );
   const [meta, setMeta] = useState(null);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);

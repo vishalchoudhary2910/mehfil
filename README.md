@@ -23,6 +23,8 @@ engine ("I need an artist today"), and **Jam Circles** (free, casual hangouts an
 | **Gig requests** (`/need`) | “I need an artist today” — ranked matches, tokenized invites, availability/quotes, nudges, expiry, alerts |
 | **Lead engine** (`/leads`) | Owner console for venue/client demand — Places/CSV/claim sources, verification, outreach, matchmaking |
 | **Engine room** (`/engines`) | Owner console: run/monitor all five engines, manage feeds, add acts by hand or CSV |
+| **Share previews** (`worker/share.js`) | Every `/artist/:slug` and `/talent/:slug` link is served with that act's title, description, price and Person JSON-LD — real WhatsApp/X cards, plus one-tap share buttons on profiles |
+| **Invite loop** (`/invite`) | Referral link, WhatsApp/X/copy sharing, two verified invites unlock the Founding Artist badge |
 
 ## Stack
 
@@ -270,6 +272,22 @@ Key tables: `users`, `artist_profiles`, `packages`, `bookings`, `booking_events`
 
 ---
 
+## Performance & reliability
+
+- **Route-level code splitting.** Only the homepage ships in the entry chunk; discovery,
+  profiles, the match deck, booking and the operator consoles load on demand
+  (`initial JS ≈ 204 kB raw / 68 kB gzip`, 22 chunks). A route that fails to load shows a
+  retry panel instead of a blank page.
+- **Motion is compositor-only.** Count-ups write to `textContent` (no React re-renders),
+  the scroll progress bar and header condense are rAF-throttled, pointers tilt only on
+  hover-capable devices, and every observer/frame/listener is cleaned up on unmount.
+  Landing sections use CSS scroll-driven animation where supported — no scroll handlers.
+- **Bounded storage.** The service worker (v2) caches only the app shell and same-origin
+  hashed assets/images (max 120 entries); `/api` and `/auth` are never cached, per-profile
+  SSR HTML never replaces the offline shell, and the worker is skipped in Vite dev.
+- **Safe defaults.** `prefers-reduced-motion` disables every ambient animation, forms keep
+  16 px inputs to stop iOS zoom, and the mobile tab bar respects `safe-area-inset`.
+
 ## Testing
 
 ```bash
@@ -309,11 +327,21 @@ Production publishing needs explicit authorization; preview URLs are also public
 ## Verification done
 
 - `vite build` clean; `wrangler deploy --dry-run` clean.
-- **52 unit tests** green across seven suites.
+- **70 unit tests** green across eight suites.
 - API matrix via curl: filters, combined filters, JSON 404s, hostile inputs (SQLi-shaped params),
   CSRF foreign origin → 403, every user route signed-out → 401, auth routes reachable.
-- Browser walkthrough (signed out): landing, discovery + filters, artist profile, collab, shows,
-  jams feed + jam share page, auth gates, console clean apart from the expected `/api/me` 401 probe.
+- Browser walkthrough (signed out, 390px and 1440px): landing, discovery + filters, artist profile,
+  talent profile, venues, gig request, invite, collab, shows; no horizontal overflow and console
+  clean apart from the expected `/api/me` 401 probe.
+- UI pass at both widths: condensed sticky header with scroll progress, mobile tab bar, animated
+  hero stats, pointer-tilt stage card, two-up category tiles, snap artist rail, one-row discover
+  filters, booking-card identity strip, share sheet — with all listeners and observers cleaned up.
+- **Lead capture end-to-end**: a venue brief submitted in the browser wrote `venue_interest`, recorded
+  `venue_shortlist` consent and queued an active sequence; a public gig brief created the request and
+  invited two matched performers. Test rows were removed afterwards.
+- **Share reach**: `/artist/:slug` and `/talent/:slug` return the SPA shell with per-act `<title>`,
+  description, canonical, `og:*`/`twitter:*` and Person JSON-LD; `/sitemap.xml` lists 189 URLs
+  (guides, artists, directory acts, venue/need/match pages) and `/robots.txt` points at it.
 - **Engines** verified end-to-end via a `node:sqlite` D1 shim: radar create/refresh/retire,
   show feed create/update, lead verify → verified/invalid, request follow-up nudge/expire,
   jam sweep expiry/purge, alert idempotency — all against the real engine functions.

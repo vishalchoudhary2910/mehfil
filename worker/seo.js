@@ -171,21 +171,34 @@ export function mountSeo(app) {
   );
 
   app.get("/sitemap.xml", async (c) => {
-    const origin = c.env.APP_ORIGIN;
+    const origin = String(c.env.APP_ORIGIN || new URL(c.req.url).origin).replace(/\/$/, "");
     const today = new Date().toISOString().slice(0, 10);
-    const urls = ["/", "/discover", "/collab", "/shows", "/in"];
+    // Every public surface, not just the booking profile: gig requests and the
+    // venue/occasion forms are the lead-capture pages organic search lands on.
+    const urls = [
+      "/", "/discover", "/collab", "/shows", "/jams", "/need", "/venues",
+      "/match", "/invite", "/list-your-act", "/in",
+    ];
     for (const city of CITIES)
       for (const cat of CATEGORIES_LIST)
         for (const ev of EVENTS_LIST)
           urls.push(`/in/${city.toLowerCase()}/${cat}/${ev}`);
-    const slugs = await c.env.DB.prepare("SELECT slug FROM artist_profiles ORDER BY slug")
-      .all()
-      .then((r) => r.results.map((a) => `/artist/${a.slug}`))
-      .catch(() => []);
+    const [slugs, talent] = await Promise.all([
+      c.env.DB.prepare("SELECT slug FROM artist_profiles ORDER BY slug")
+        .all()
+        .then((r) => r.results.map((a) => `/artist/${a.slug}`))
+        .catch(() => []),
+      c.env.DB.prepare(
+        "SELECT slug FROM talent_directory WHERE status IN ('active','stale') ORDER BY slug"
+      )
+        .all()
+        .then((r) => r.results.map((t) => `/talent/${t.slug}`))
+        .catch(() => []),
+    ]);
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-      [...urls, ...slugs]
+      [...urls, ...slugs, ...talent]
         .map((u) => `  <url><loc>${origin}${u}</loc><lastmod>${today}</lastmod></url>`)
         .join("\n") +
       `\n</urlset>\n`;

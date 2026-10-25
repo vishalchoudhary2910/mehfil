@@ -16,8 +16,9 @@ createRoot(document.getElementById("root")).render(
 );
 
 // Installable app (home screen / APK-style): register the service worker late
-// and swallow failures — a blocked SW must never affect the app itself.
-if ("serviceWorker" in navigator) {
+// and swallow failures — a blocked SW must never affect the app itself. Vite
+// dev is skipped entirely so hot reload can never serve a stale shell.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => null);
   });

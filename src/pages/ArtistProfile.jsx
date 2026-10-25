@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { INR, CATS, Stars, Badge, Avatar, Empty, SignInLink } from "../ui.jsx";
+import { INR, CATS, Stars, Badge, Avatar, Empty, SignInLink, ShareRow, usePageMeta } from "../ui.jsx";
 
 const KIND_ICONS = { video: "🎬", music: "🎧", press: "📰", image: "📸", link: "🔗" };
 const KIND_LABELS = { video: "Video", music: "Audio", press: "Press", image: "Gallery", link: "Link" };
@@ -41,6 +41,12 @@ export default function ArtistProfile() {
 
   const a = data?.artist;
   const accentHue = Number(a?.accent_hue) > 0 ? Number(a.accent_hue) : Number(a?.hue || 265);
+  usePageMeta(
+    a ? `${a.stage_name} — ${CATS[a.category]?.label || "Artist"} in ${a.city} | Mehfil` : null,
+    a
+      ? `Book ${a.stage_name} for your event in ${a.city}. ${a.base_price_inr ? `Packages from ${INR(a.base_price_inr)}. ` : ""}Verified profile, escrow-protected booking and real availability.`
+      : null
+  );
 
   // Portfolio: real items the act added, videos first. Empty → nothing invented.
   const items = useMemo(() => {
@@ -282,6 +288,20 @@ export default function ArtistProfile() {
 
         <div className="side sticky-side stack" style={{ gap: 14 }}>
           <div className="card">
+            {/* Mobile puts the booking card above the profile, so it carries
+                its own identity strip — never show a price for a stranger. */}
+            <div className="side-id">
+              <Avatar name={a.stage_name} hue={accentHue} size="avatar-lg" />
+              <div className="grow">
+                <div className="row wrapline" style={{ gap: 6 }}>
+                  <h2 style={{ fontSize: "1.15rem", margin: 0 }}>{a.stage_name}</h2>
+                  {a.verified && <Badge kind="verified" />}
+                </div>
+                <div className="small muted">
+                  {CATS[a.category]?.label} · {a.city}
+                </div>
+              </div>
+            </div>
             <div className="row between">
               <span className="small muted">{sel ? "Selected package" : "Booking"}</span>
               <span className="small muted">{sel ? `${sel.duration_hours} hrs` : ""}</span>
@@ -319,6 +339,10 @@ export default function ArtistProfile() {
                 ⚡ Quick-match deck
               </Link>
             </div>
+            <ShareRow
+              path={`/artist/${a.slug}`}
+              text={`${a.stage_name} — ${CATS[a.category]?.label || "Artist"} in ${a.city} on Mehfil`}
+            />
           </div>
 
           <div className="card">

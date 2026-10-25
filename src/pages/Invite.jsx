@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
+import { ShareRow, SignInLink, usePageMeta } from "../ui.jsx";
 
 // The supply-side growth loop: recognized artists invite the unlisted acts
 // they know. Two verified invites unlock the Founding Artist badge.
@@ -8,7 +9,11 @@ export default function Invite() {
   const { session, notify } = useSession();
   const [params] = useSearchParams();
   const [data, setData] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const claimedRef = useRef(false);
+  usePageMeta(
+    "Invite fellow artists — Mehfil",
+    "Bring the acts you know onto Mehfil. Two verified invites unlock the Founding Artist badge — 0% commission for six months."
+  );
 
   const load = useCallback(() => {
     api("/api/referral").then(setData).catch(() => setData({ error: 1 }));
@@ -18,17 +23,20 @@ export default function Invite() {
     if (session) load();
   }, [session, load]);
 
-  // A ?ref=CODE visit claims the attribution and starts the invitee's path.
+  // A ?ref=CODE visit claims the attribution exactly once. Guarding with a ref
+  // matters: without it, reloading the invite stats re-runs this effect and
+  // posts the same claim forever.
   useEffect(() => {
     const ref = params.get("ref");
-    if (!ref || !session || data?.claimed) return;
+    if (!ref || !session?.user || claimedRef.current) return;
+    claimedRef.current = true;
     api("/api/referral/claim", { method: "POST", body: JSON.stringify({ code: ref }) })
       .then(() => {
         notify("You were invited by a fellow artist — welcome!", "ok");
         load();
       })
-      .catch(() => {});
-  }, [params, session, data, load, notify]);
+      .catch(() => { claimedRef.current = false; });
+  }, [params, session, load, notify]);
 
   const waText = encodeURIComponent(
     "Come join me on Mehfil — it's where hosts in India book artists. My link: " +
@@ -45,9 +53,9 @@ export default function Invite() {
             Bring the acts you know onto Mehfil. Two invites that list and verify unlock the
             Founding Artist badge on your profile — permanent early-access trust.
           </p>
-          <Link to={`/login?returnTo=${encodeURIComponent("/invite")}`} className="btn btn-primary mt-2">
+          <SignInLink returnTo="/invite" className="btn btn-primary mt-2">
             Sign in to get your invite link
-          </Link>
+          </SignInLink>
         </div>
       </div>
     );
@@ -81,29 +89,21 @@ export default function Invite() {
             <div className="tiny muted">YOUR INVITE LINK</div>
             <code style={{ fontSize: 15, wordBreak: "break-all" }}>{url}</code>
           </div>
-          <div className="row" style={{ gap: 8 }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              disabled={busy}
-              onClick={() => {
-                setBusy(true);
-                navigator.clipboard?.writeText(url).catch(() => null);
-                notify("Link copied");
-                setTimeout(() => setBusy(false), 600);
-              }}
-            >
-              Copy
-            </button>
-            <a
-              className="btn btn-primary btn-sm"
-              href={`https://wa.me/?text=${waText}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Share on WhatsApp
-            </a>
-          </div>
+          <a
+            className="btn btn-primary btn-sm"
+            href={`https://wa.me/?text=${waText}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Share on WhatsApp
+          </a>
         </div>
+
+        <ShareRow
+          path={url.replace(/^https?:\/\/[^/]+/i, "")}
+          text="Performing live? Join me on Mehfil — hosts across India book artists here."
+          label="Your referral link — send it on WhatsApp or X"
+        />
 
         <div className="row mt-3" style={{ gap: 18, flexWrap: "wrap" }}>
           <Stat n={sent} label="invites sent" />

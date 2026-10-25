@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { INR, catOptions, categoryLabel, categoryIcon, Empty, qs } from "../ui.jsx";
+import { INR, catOptions, categoryLabel, categoryIcon, Empty, qs, usePageMeta } from "../ui.jsx";
 import { KNOWN_CITIES } from "../../shared/categories.js";
 
 const EVENT_TYPES = ["Cafe / bar night", "House party", "Birthday", "Wedding / Sangeet", "Corporate", "College fest", "Poetry night", "Comedy night", "Festival", "Other"];
@@ -24,6 +24,10 @@ function StatusPill({ status }) {
 }
 
 export default function Need() {
+  usePageMeta(
+    "Post a gig brief and get performers — Mehfil",
+    "One 60-second brief reaches every matched performer in your city. Performers reply with availability and a quote — no fee to post."
+  );
   const [params] = useSearchParams();
   const { session, notify } = useSession();
   const [form, setForm] = useState({

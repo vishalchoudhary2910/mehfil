@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../session.jsx";
-import { INR, CATS, catOptions, categoryLabel, categoryIcon, Stars, Badge, Empty, qs, SourceBadge } from "../ui.jsx";
+import { INR, CATS, catOptions, categoryLabel, categoryIcon, Stars, Badge, Empty, qs, SourceBadge, usePageMeta } from "../ui.jsx";
 
 const hueFor = (s) =>
   100 + (Math.abs([...String(s || "act")].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) | 0, 7)) % 260);
@@ -151,6 +151,10 @@ export default function Discover() {
   const [dirTotal, setDirTotal] = useState(0);
   const [matches, setMatches] = useState(null);
   const [searchBusy, setSearchBusy] = useState(false);
+  usePageMeta(
+    "Find live & creative talent across India — Mehfil",
+    "Browse verified DJs, singers, bands, poets, comics, rappers, dancers and anchors with fixed prices and real availability — or discover unlisted acts and claim your profile."
+  );
 
   const view = params.get("view") === "directory" ? "directory" : "bookable";
   const f = {
@@ -216,6 +220,7 @@ export default function Discover() {
 
   return (
     <div className="wrap section" style={{ paddingTop: 26 }}>
+      <h1 className="sr-only">Find live and creative talent across India</h1>
       <div className="section-head" style={{ marginBottom: 14 }}>
         <div>
           <div className="kicker">Discovery</div>
@@ -234,7 +239,7 @@ export default function Discover() {
           <input
             name="q"
             className="input"
-            placeholder="Name, genre, vibe… (shayari, sufi, stand-up)"
+            placeholder="Try “sufi”, “shayari”, “stand-up”…"
             defaultValue={f.q}
             aria-label="Search artists"
           />

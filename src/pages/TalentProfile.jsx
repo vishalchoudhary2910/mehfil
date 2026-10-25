@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { Avatar, CATS, Empty, SignInLink, SourceBadge, categoryLabel } from "../ui.jsx";
+import { Avatar, CATS, Empty, SignInLink, SourceBadge, categoryLabel, ShareRow, usePageMeta } from "../ui.jsx";
 
 const fmtDate = (s) => {
   if (!s) return "";
@@ -21,6 +21,14 @@ export default function TalentProfile() {
     setData(null);
     api(`/api/talent/profile/${slug}`).then(setData).catch((e) => setErr(e.message));
   }, [slug]);
+
+  const listed = data?.talent;
+  usePageMeta(
+    listed ? `${listed.name} — ${categoryLabel(listed.category)} in ${listed.city || "India"} | Mehfil` : null,
+    listed
+      ? `${listed.name} on Mehfil${listed.city ? `, ${listed.city}` : ""}. ${listed.bio ? listed.bio.slice(0, 120) : "Claim this profile free to add rates, a showreel and gig requests."}`
+      : null
+  );
 
   const claim = async () => {
     setBusy(true);
@@ -92,6 +100,14 @@ export default function TalentProfile() {
             <SignInLink returnTo={`/talent/${t.slug}`} className="btn btn-primary">Claim with one click</SignInLink>
           ))}
         </div>
+      </div>
+
+      <div className="row" style={{ justifyContent: "flex-end" }}>
+        <ShareRow
+          path={`/talent/${t.slug}`}
+          text={`${t.name} — ${categoryLabel(t.category)}${t.city ? ` in ${t.city}` : ""} on Mehfil`}
+          label="Share this listing"
+        />
       </div>
 
       {!claimed_slug && (

@@ -1,20 +1,25 @@
-// Mehfil service worker — offline shell + static assets.
+// Mehfil service worker — offline shell + immutable assets.
 //
-// Rules that keep a booking marketplace safe:
+// Rules that keep a booking marketplace safe and cheap:
 //   - /api, /auth, /cdn-cgi and any non-GET never touch the cache (sessions,
 //     prices and messages are private; the API already sends no-store);
-//   - navigations are network-first with the SPA shell as the offline
-//     fallback, so users always land on the React router;
-//   - hashed /assets/* are cache-first (immutable by URL) and trimmed so the
-//     cache cannot grow without bound; cross-origin requests are left alone.
-const SHELL = "mehfil-shell-v1";
-const STATIC = "mehfil-static-v1";
-const MAX_STATIC = 160;
+//   - navigations are network-first, and only the homepage shell becomes the
+//     offline fallback — per-profile SSR HTML must never replace it;
+//   - only same-origin /assets/* (hashed, immutable), icons and images are
+//     cache-first; everything else uses the network;
+//   - the static cache is trimmed so storage stays bounded.
+const SHELL = "mehfil-shell-v2";
+const STATIC = "mehfil-static-v2";
+const MAX_STATIC = 120;
 
 const isAPI = (url) =>
   url.pathname.startsWith("/api/") ||
   url.pathname.startsWith("/auth/") ||
   url.pathname.startsWith("/cdn-cgi/");
+
+const isCacheableAsset = (url) =>
+  url.pathname.startsWith("/assets/") ||
+  /\.(png|jpe?g|webp|avif|svg|ico|woff2?)$/i.test(url.pathname);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -47,8 +52,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          // Only a healthy shell may become the offline fallback.
-          if (res.ok) {
+          // Only the canonical shell may become the offline fallback. A
+          // /artist/:slug response carries that act's title and must not
+          // overwrite it (and would otherwise churn storage on every visit).
+          if (res.ok && (url.pathname === "/" || url.pathname === "/index.html")) {
             const copy = res.clone();
             caches.open(SHELL).then((cache) => cache.put("/", copy)).catch(() => null);
           }
@@ -59,12 +66,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (!isCacheableAsset(url)) return;
+
   // Static assets: cache first, fill on miss, trim to MAX_STATIC.
   event.respondWith(
     caches.match(req).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
+      return fetch(req).then(async (res) => {
         if (!res || res.status !== 200 || !res.ok) return res;
+        if (res.headers.get("cache-control") === "no-store") return res;
         const copy = res.clone();
         caches
           .open(STATIC)

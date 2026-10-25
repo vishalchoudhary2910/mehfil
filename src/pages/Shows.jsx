@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { INR, Empty, SignInLink, SourceBadge, qs } from "../ui.jsx";
+import { INR, Empty, SignInLink, SourceBadge, qs, usePageMeta } from "../ui.jsx";
 
 const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 
 export default function Shows() {
+  usePageMeta(
+    "Live shows, open mics & gigs near you — Mehfil",
+    "Discover free and ticketed shows across Pune, Mumbai and Jaipur — RSVP, bring friends, or list your own night in a minute."
+  );
   const [params, setParams] = useSearchParams();
   const { session, notify } = useSession();
   const [shows, setShows] = useState(null);

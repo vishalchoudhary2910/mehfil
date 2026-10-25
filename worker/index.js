@@ -3,6 +3,7 @@
 import { createFreebuffAuth, isSameOriginRequest } from "@freebuff/auth";
 import { Hono } from "hono";
 import { mountSeo } from "./seo.js";
+import { mountShareRoutes } from "./share.js";
 import { mountExtraRoutes, ensureSchemaOnce } from "./extra.js";
 import { mountLeadRoutes, ensureLeadsSchema } from "./leads.js";
 import { mountTalentRoutes, ensureTalentSchema } from "./talent.js";
@@ -268,6 +269,8 @@ export default {
 
     // Server-rendered SEO landing pages: /in/:city/:category/:event, hub, sitemap.
     mountSeo(app);
+    // Share previews: the SPA shell with per-profile title/description/JSON-LD.
+    mountShareRoutes(app);
 
     // ----- public: filter metadata
     app.get("/api/meta", async (c) => {

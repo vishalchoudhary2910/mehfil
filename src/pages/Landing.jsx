@@ -1,9 +1,51 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../session.jsx";
-import { INR, CATS, Stars, SignInLink, qs } from "../ui.jsx";
+import { INR, CATS, Stars, SignInLink, qs, usePageMeta } from "../ui.jsx";
+import { useCountUp, usePointerTilt } from "../motion.jsx";
+
+// Numeric hero proof: counts up once, when the stat is on screen.
+function Stat({ value, suffix = "+", label }) {
+  const ref = useCountUp(value, { suffix });
+  return (
+    <div>
+      <div className="n">
+        <span ref={ref}>{value}{suffix}</span>
+      </div>
+      <div className="l">{label}</div>
+    </div>
+  );
+}
+
+// The poster that gives the hero something to look at: a lit stage, a spinning
+// record and live equaliser bars — CSS only, so it costs no image bytes and
+// freezes automatically under prefers-reduced-motion.
+function StageCard() {
+  const bars = [34, 58, 42, 78, 55, 94, 46, 68, 32, 60, 86, 40];
+  const tiltRef = usePointerTilt();
+  return (
+    <div className="stage-card" aria-hidden="true" ref={tiltRef}>
+      <div className="stage-beam" />
+      <div className="stage-disc" />
+      <div className="stage-chip">
+        <span>Booked this week</span>
+        <b>Sufi trio · ₹14,000</b>
+      </div>
+      <div className="stage-eq">
+        {bars.map((h, i) => (
+          <i key={i} style={{ height: `${h}%`, animationDelay: `${(i % 6) * 0.12}s` }} />
+        ))}
+      </div>
+      <div className="stage-live"><span className="dot" /> Live on Mehfil</div>
+    </div>
+  );
+}
 
 function Hero() {
+  usePageMeta(
+    "Mehfil — Hire, team up, and perform",
+    "Book verified DJs, singers, bands, poets and anchors across India. Fixed prices, escrow-protected payments and real availability — or list your act free."
+  );
   const nav = useNavigate();
   const [meta, setMeta] = useState(null);
   const [city, setCity] = useState("");
@@ -13,7 +55,8 @@ function Hero() {
 
   return (
     <section className="hero">
-      <div className="wrap">
+      <div className="wrap hero-grid">
+        <div className="hero-copy">
         <div className="row wrapline" style={{ gap: 8 }}>
           <span className="pill">🇮🇳 Launch city: Pune · Mumbai · Jaipur</span>
           <span className="pill">Escrow-protected bookings</span>
@@ -25,8 +68,8 @@ function Hero() {
         <p className="sub">
           Hire DJs, singers, bands, <strong>poets &amp; shayars, stand-up comics, rappers, dancers
           and anchors</strong> for real events — with genuine profiles, upfront prices and real
-          availability. Then find bandmates, run your shows, jam for free tonight, and keep the
-          receipts in the app.
+          availability.<span className="sub-tail"> Then find bandmates, run your shows, jam for free
+          tonight, and keep the receipts in the app.</span>
         </p>
 
         <form
@@ -34,12 +77,11 @@ function Hero() {
           onSubmit={(e) => { e.preventDefault(); nav(`/discover${qs({ q, city, category: cat })}`); }}
         >
           <input
-            className="input"
+            className="input hero-search-input"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Try “shayari”, “sufi band”, “stand-up”…"
             aria-label="Search artists"
-            style={{ minWidth: 220, flex: "1 1 240px" }}
           />
           <select value={city} onChange={(e) => setCity(e.target.value)} aria-label="City">
             <option value="">Any city</option>
@@ -59,15 +101,33 @@ function Hero() {
         </form>
 
         <div className="hero-stats">
-          <div><div className="n">{(meta?.categories || []).reduce((s, c) => s + c.n, 0) || "0"}+</div><div className="l">profiles to hire</div></div>
-          <div><div className="n">{meta?.directory_total || 0}+</div><div className="l">acts found by the daily radar</div></div>
+          <Stat value={(meta?.categories || []).reduce((s, c) => s + c.n, 0) || 0} label="profiles to hire" />
+          <Stat value={meta?.directory_total || 0} suffix="+" label="acts found by the daily radar" />
           <div><div className="n">0%</div><div className="l">commission for Founding Artists</div></div>
           <div><div className="n">&lt;5 min</div><div className="l">from brief to invited acts</div></div>
         </div>
+        </div>
+        <StageCard />
       </div>
     </section>
   );
 }
+
+// One concrete line per act — repeated boilerplate reads like a template.
+const CAT_BLURB = {
+  dj: "Club nights, sangeets and terrace parties",
+  singer: "Bollywood, sufi and acoustic sets",
+  band: "Full-band shows for fests and weddings",
+  anchor: "Hosts who keep the room moving",
+  poet: "Shayari, slam and open-mic features",
+  comedian: "Stand-up sets and roast nights",
+  rapper: "Hip-hop cyphers and festival stages",
+  dancer: "Troupes for sangeet and stage shows",
+  instrumentalist: "Soloists and session players",
+  dhol: "Baraat, dholak and percussion crews",
+  magician: "Close-up magic and family shows",
+  storyteller: "Spoken word and kids' storytelling",
+};
 
 function Categories() {
   const nav = useNavigate();
@@ -86,20 +146,18 @@ function Categories() {
           </div>
           <Link className="btn btn-ghost btn-sm" to="/discover">See everyone →</Link>
         </div>
-        <div className="grid grid-4">
+        <div className="grid grid-4 cat-grid">
           {entries.map(([k, v]) => (
             <button
               key={k}
-              className="card card-hover"
+              className="card card-hover cat-card"
               style={{ textAlign: "left", cursor: "pointer" }}
               onClick={() => nav(`/discover?category=${k}`)}
             >
-              <div style={{ fontSize: 30 }}>{v.icon}</div>
-              <h3 className="mt-1">{v.label}</h3>
-              <p className="small muted mb-0">
-                Open mics, sangeets, club nights, college fests and corporate days — real
-                profiles, upfront prices, no quote-and-wait.
-              </p>
+              <span className="cat-icon" aria-hidden>{v.icon}</span>
+              <h3>{v.label}</h3>
+              <p className="small muted">{CAT_BLURB[k] || "Real profiles, upfront prices"}</p>
+              <span className="cat-go">Explore <span aria-hidden>→</span></span>
             </button>
           ))}
         </div>
@@ -238,7 +296,7 @@ function FeaturedArtists() {
           </div>
           <Link className="btn btn-ghost btn-sm" to="/discover">Browse everyone →</Link>
         </div>
-        <div className="grid grid-4">
+        <div className="grid grid-4 artist-rail">
           {artists.map((a) => (
             <Link key={a.id} to={`/artist/${a.slug}`} className="card card-hover artist-card" style={{ padding: 0, overflow: "hidden" }}>
               <div className="cover" style={{ height: 90, borderRadius: 0, background: `linear-gradient(135deg, hsl(${a.hue}, 62%, 42%), hsl(${(a.hue + 52) % 360}, 70%, 54%))` }}>
@@ -397,7 +455,7 @@ function ArtistCTA() {
 
 export default function Landing() {
   return (
-    <>
+    <div className="landing">
       <Hero />
       <Categories />
       <HowItWorks />
@@ -408,6 +466,6 @@ export default function Landing() {
       <JamsTeaser />
       <VenueCTA />
       <ArtistCTA />
-    </>
+    </div>
   );
 }

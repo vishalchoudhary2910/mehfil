@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { SignInLink, catOptions } from "../ui.jsx";
+import { SignInLink, catOptions, usePageMeta } from "../ui.jsx";
 
 const CATS = catOptions(true).map((c) => [c.key, `${c.icon} ${c.label}`]);
 
 export default function Claim() {
+  usePageMeta(
+    "List your act free — get gig leads — Mehfil",
+    "Add your act in 30 seconds and go live immediately. No account, no approval queue — poets, comics, singers, DJs, bands and anchors get found by hosts in their city."
+  );
   const { notify } = useSession();
   const [f, setF] = useState({
     name: "", category: "singer", city: "", area: "",

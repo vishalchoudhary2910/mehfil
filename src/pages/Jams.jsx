@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, useSession } from "../session.jsx";
-import { Empty, SignInLink, qs } from "../ui.jsx";
+import { Empty, SignInLink, qs, usePageMeta } from "../ui.jsx";
 
 const KINDS = [
   ["", "All jams"],
@@ -83,6 +83,10 @@ function JamCard({ jam, session, onJoin, onBroadcast, onCancel, busy }) {
 }
 
 export default function Jams() {
+  usePageMeta(
+    "Jam circles tonight — Mehfil",
+    "Free, low-pressure jam sessions near you. Say what you play, show up, and play with people from your city."
+  );
   const [params, setParams] = useSearchParams();
   const { session, notify } = useSession();
   const [jams, setJams] = useState(null);

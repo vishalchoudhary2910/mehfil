@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { signInUrl } from "@freebuff/auth/react";
 import { CATEGORIES, CATEGORY_KEYS, categoryLabel, categoryIcon } from "../shared/categories.js";
@@ -91,6 +92,102 @@ export function Empty({ icon = "🎵", title, children }) {
       {children && <div className="small mt-1">{children}</div>}
     </div>
   );
+}
+
+// One-tap sharing is the growth loop: most artists hand a profile to a host
+// over WhatsApp, so the link must be one tap away — never "copy this URL".
+const shareUrl = (path) => {
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return `${origin}${path || (typeof window === "undefined" ? "" : window.location.pathname)}`;
+};
+
+export function ShareRow({ path, text, label = "Share this profile" }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const url = shareUrl(path);
+  const copy = text || (typeof document === "undefined" ? "Mehfil" : document.title);
+  const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${copy} ${url}`)}`;
+  const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(copy)}&url=${encodeURIComponent(url)}`;
+
+  const onShare = async () => {
+    if (navigator.share) {
+      await navigator
+        .share({ title: "Mehfil", text: copy, url })
+        .catch(() => null);
+      return;
+    }
+    await navigator.clipboard?.writeText(url).catch(() => null);
+    setCopied(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 1600);
+  };
+
+  return (
+    <div className="share-block">
+      <div className="tiny muted">{label}</div>
+      <div className="share-row">
+        <a
+          className="share-btn wa"
+          href={whatsapp}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Share on WhatsApp"
+        >
+          <span aria-hidden>💬</span> WhatsApp
+        </a>
+        <a
+          className="share-btn"
+          href={tweet}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Share on X"
+        >
+          <span aria-hidden>𝕏</span> Post
+        </a>
+        <button className="share-btn" type="button" onClick={onShare}>
+          <span aria-hidden>↗</span> {copied ? "Copied" : "More"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Keep the tab title and description in sync with client-side navigation —
+// server routes set them for crawlers, this keeps the human-visible copy true.
+export function usePageMeta(title, desc) {
+  useEffect(() => {
+    if (!title) return;
+    // Restore whatever the shell had before this page, so a route that sets
+    // no metadata (bookings, dashboard) never inherits the last artist's name.
+    const prevTitle = document.title;
+    const descEl = document.head.querySelector('meta[name="description"]');
+    const prevDesc = descEl?.getAttribute("content") || "";
+    document.title = title;
+    const set = (selector, attr, value) => {
+      let el = document.head.querySelector(selector);
+      if (!el) {
+        el = document.createElement("meta");
+        const [, key, val] = selector.match(/^meta\[(\w+)="([^"]+)"\]$/) || [];
+        if (key) el.setAttribute(key, val);
+        document.head.appendChild(el);
+      }
+      if (attr) el.setAttribute(attr, value);
+      else el.setAttribute("content", value);
+    };
+    if (desc) {
+      set('meta[name="description"]', null, desc);
+      set('meta[property="og:description"]', null, desc);
+      set('meta[name="twitter:description"]', null, desc);
+    }
+    set('meta[property="og:title"]', null, title);
+    set('meta[name="twitter:title"]', null, title);
+
+    return () => {
+      document.title = prevTitle;
+      if (prevDesc) descEl?.setAttribute("content", prevDesc);
+    };
+  }, [title, desc]);
 }
 
 export function SignInLink({ returnTo, className = "btn btn-primary", children }) {
